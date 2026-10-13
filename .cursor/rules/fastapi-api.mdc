@@ -1,0 +1,14 @@
+---
+description: Transport and validation rules for FastAPI endpoints.
+globs: backend/app/api/**/*.py
+alwaysApply: false
+---
+
+# FastAPI boundary
+
+- Routes decode, validate, call, and encode; they do not implement CV algorithms.
+- Validate image magic bytes, payload size, dimensions, and parameters before processing.
+- Return clear 4xx responses for invalid client input; never return a blank image for an error.
+- Keep user uploads ephemeral and do not log payloads or base64 data.
+- Expose `processing_ms` separately from total request timing and preserve response schemas.
+- Registry metadata is the source for operation IDs and parameter constraints.
