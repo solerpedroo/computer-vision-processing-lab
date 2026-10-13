@@ -1,0 +1,15 @@
+---
+description: Numerical and architectural rules for Python image processing.
+globs: backend/app/processing/**/*.py
+alwaysApply: false
+---
+
+# Python processing
+
+- Keep processors pure: no FastAPI, request, response, filesystem, or UI imports.
+- State BGR/RGB/grayscale, dtype, range, alpha policy, and border behavior in each public operation.
+- Validate parameters at a defined boundary; do not silently correct invalid kernels or thresholds.
+- Avoid in-place mutation of the supplied image unless the function contract says so.
+- Timing measures the operation only, excluding image decode/encode and HTTP work.
+- Floating calculations use an explicit scale; clipping and integer conversion happen at named output boundaries.
+- Add invariant-based tests using deterministic synthetic fixtures before optimizing.
