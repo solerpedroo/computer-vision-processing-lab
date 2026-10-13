@@ -1,1 +1,8 @@
-operations: []
+operations:
+  - id: color_noop
+    module: color
+    name: Identity
+    description: Returns the image unchanged to verify the processing pipeline.
+    output_kind: image
+    requires_grayscale: false
+    params: []
