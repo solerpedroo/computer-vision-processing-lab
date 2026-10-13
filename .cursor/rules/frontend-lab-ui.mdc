@@ -1,0 +1,14 @@
+---
+description: UI and state rules for the scientific image-processing lab.
+globs: frontend/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Lab UI
+
+- UI is English, dark, accessible, and explains the selected operation from registry metadata.
+- Keep `originalImage` immutable until an explicit reset; processing writes only `processedImage`.
+- Render parameter controls from the registry; do not duplicate server defaults, limits, or operation names.
+- Debounce parameter changes and avoid requests for unchanged configurations.
+- Surface API errors and timing visibly; do not hide failed processing behind stale output.
+- Charts label axes, units, legends, and channel/color-space conventions.
