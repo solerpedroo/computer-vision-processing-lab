@@ -49,3 +49,18 @@ chat context; implementation details belong in task cards.
 - **Consequence:** Future registry entries, processing docstrings, schemas, and
   tests use this convention. Wave 1 implements the decoder and upload limits;
   Wave 0 deliberately has no image-bearing endpoint.
+
+## ADR-005 — Upload safety envelope
+
+- **Status:** accepted
+- **Date:** 2026-10-13
+- **Decision:** Wave 1 accepts only byte-verified PNG and JPEG uploads up to
+  10 MiB and decoded dimensions up to 4096 × 4096 pixels. Decoding discards
+  alpha and returns RGB `uint8` under ADR-004. Upload bytes and decoded arrays
+  exist only for the request lifetime.
+- **Why:** These limits make the CPU-only MVP responsive and constrain malformed
+  or decompression-bomb-like input without imposing an unnecessary database or
+  storage service.
+- **Consequence:** API validation returns clear 4xx errors; the UI advertises
+  the same file envelope. A later performance wave may amend the numbers with
+  measured evidence, not per-route overrides.
