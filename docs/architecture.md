@@ -32,3 +32,16 @@ intentional during Wave 0.
 Future process responses expose algorithm-only `processing_ms` separately from
 total `request_ms`. The original image belongs to client state and remains
 unchanged until explicit reset. The server does not persist uploads by default.
+
+## Wave 1 image path
+
+`POST /api/process` receives an `image` multipart file and an `operation_id`.
+The image adapter verifies PNG/JPEG signatures, caps input at 10 MiB and
+4096 × 4096 pixels, decodes it to the ADR-004 RGB representation, and discards
+the bytes after the request. `color_noop` is a pure identity operation used to
+prove the full path; its output is encoded as PNG only at the HTTP boundary.
+
+The Wave 1 UI creates a local URL for the original image and keeps it immutable.
+It displays a separate processed PNG URL, client-side metadata, timing, shared
+zoom, reset, and download. Wave 2 will replace the fixed identity selection with
+registry-driven operation controls.
