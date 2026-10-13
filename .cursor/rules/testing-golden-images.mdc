@@ -1,0 +1,14 @@
+---
+description: Regression-test rules for numerical image-processing behavior.
+globs: backend/tests/**/*.py
+alwaysApply: false
+---
+
+# Image-processing tests
+
+- Use small synthetic arrays first; use real samples only when licensed and documented.
+- Seed generated noise and state expected dtype/range/border behavior.
+- Assert semantic invariants, dimensions, errors, and bounded numeric behavior.
+- Avoid exact comparisons of lossy encoded files and float FFT output; justify tolerances.
+- Every registry-backed operation needs a parameter-validation test and at least one operation-level test.
+- Keep fixture files tiny; never add an undocumented or large binary asset.
