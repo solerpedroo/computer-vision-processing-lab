@@ -22,7 +22,8 @@ the frontend, API, and numerical code begin to diverge.
 
 Image input and visualization; color spaces and histograms; spatial filters;
 edge detection; thresholding and morphology; FFT analysis; algorithm comparison;
-and reproducible experiment export.
+and reproducible experiment export. Wave 1 is implemented: upload a PNG/JPEG to
+validate the full identity-processing path before selecting a real operation.
 
 ## Multi-agent workflow
 
