@@ -25,13 +25,34 @@ product operation exists yet.
 }
 ```
 
-## Future image-bearing endpoints
+## `POST /api/process`
 
-`POST /api/process`, `/api/compare`, `/api/frequency`, and `/api/metrics` are
-not implemented in Wave 0. Their primary image transport will be
-`multipart/form-data`: an `image` file field plus typed operation fields or a
-validated JSON parameter part. Wave 1 defines exact request/response schemas,
-magic-byte validation, file/dimension limits, and error payloads.
+The first image-bearing endpoint accepts `multipart/form-data`:
 
-All output images will be encoded PNG. Responses will distinguish algorithm
-`processing_ms` from full `request_ms`.
+- `image` — a PNG or JPEG file, validated by magic bytes rather than extension;
+- `operation_id` — currently only `color_noop`.
+
+Limits are 10 MiB and 4096 × 4096 decoded pixels. Valid input is normalized to
+RGB `uint8`, processed in memory, and never persisted. Unsupported or corrupt
+bytes return `415`; files exceeding size or dimension limits return `413`; an
+unknown operation returns `422`.
+
+```json
+{
+  "operation_id": "color_noop",
+  "output_image": "<base64 PNG>",
+  "processing_ms": 0.02,
+  "request_ms": 3.41,
+  "metadata": {
+    "width": 640,
+    "height": 480,
+    "channels": 3,
+    "source_format": "PNG",
+    "source_file_size_bytes": 12345
+  }
+}
+```
+
+All output images are encoded PNG. Responses distinguish algorithm
+`processing_ms` from full `request_ms`. `/api/compare`, `/api/frequency`, and
+`/api/metrics` remain deferred to their planned waves.
