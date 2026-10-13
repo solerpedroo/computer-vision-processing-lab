@@ -1,12 +1,27 @@
 from collections.abc import Callable
+from time import perf_counter
 
+import numpy as np
+
+from app.processing.color.noop import color_noop
+from app.processing.models import ProcessResult
 from app.processing.registry import get_operation_ids
 
-Handler = Callable[..., object]
+Handler = Callable[[np.ndarray], ProcessResult]
 
-# Future waves register pure processing functions here. The empty foundation is
-# intentional: it proves the registry drift check without creating a fake operation.
-HANDLERS: dict[str, Handler] = {}
+HANDLERS: dict[str, Handler] = {"color_noop": color_noop}
+
+
+def execute(operation_id: str, image: np.ndarray) -> tuple[ProcessResult, float]:
+    """Run a registered processor and measure only its numerical execution."""
+    try:
+        handler = HANDLERS[operation_id]
+    except KeyError as error:
+        raise ValueError(f"Unknown operation_id: {operation_id}") from error
+
+    started_at = perf_counter()
+    result = handler(image)
+    return result, (perf_counter() - started_at) * 1000
 
 
 def assert_registry_integrity() -> None:
