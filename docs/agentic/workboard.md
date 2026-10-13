@@ -8,4 +8,5 @@ card rather than this table.
 |---|---|---|---|---|
 | Foundation | Agentic layer (ADR-001) | done | repository | Planner creates Wave 0 task cards before product code |
 | 0 | `tasks/wave-0-contract-baseline.md` | done | cv-reviewer | Wave 1 image input task may now be planned |
-| 1–9 | — | blocked by preceding waves | — | follow delivery sequence in implementation plan |
+| 1 | `tasks/wave-1-image-input.md` | done | cv-reviewer | Wave 2 color task may now be planned |
+| 2–9 | — | blocked by preceding waves | — | follow delivery sequence in implementation plan |
