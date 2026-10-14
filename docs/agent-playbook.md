@@ -33,3 +33,20 @@ parameter panel. No two agents edit the same card or workboard row.
 - Any continuation can start from the committed card and handoff alone.
 
 Refer to `implementation-plan.md` for the product-specific DoD of every wave.
+
+## Wave progress (maintain on closure)
+
+| Wave | Status | Task card | Last verified |
+|------|--------|-----------|---------------|
+| 0 | done | `wave-0-contract-baseline.md` | 2026-10-13 |
+| 1 | done | `wave-1-image-input.md` | 2026-10-13 |
+| 2 | done | `wave-2-color-processing.md` | 2026-10-13 |
+| 3 | done | `wave-3-spatial-filtering.md` | 2026-10-13 |
+| 4 | done | `wave-4-edge-detection.md` | 2026-10-13 |
+| 5 | done | `wave-5-morphology.md` | 2026-10-13 |
+| 6 | done | `wave-6-frequency.md` | 2026-10-13 |
+| 7 | done | `wave-7-comparison.md` | 2026-10-13 |
+| 8–9 | blocked | — | after Wave 8 export |
+
+When marking a wave **done**, update this table, the workboard row, and record
+`ruff` / `pytest` / frontend test output in the task card.
