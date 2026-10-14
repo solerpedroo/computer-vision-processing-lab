@@ -1,13 +1,14 @@
 from base64 import b64encode
+from json import JSONDecodeError, loads
 from time import perf_counter
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 
 from app.core.images import ImageValidationError, decode_upload, encode_png
 from app.processing.dispatcher import execute
-from app.processing.registry import get_operations
+from app.processing.registry import get_operations, validate_params
 from app.schemas.operations import OperationsResponse
-from app.schemas.process import ImageMetadata, ProcessResponse
+from app.schemas.process import HistogramChart, ImageMetadata, ProcessResponse
 from app.schemas.system import HealthResponse
 
 router = APIRouter(prefix="/api")
@@ -27,14 +28,20 @@ def operations() -> OperationsResponse:
 
 @router.post("/process", response_model=ProcessResponse, tags=["processing"])
 async def process(
-    image: UploadFile = File(...), operation_id: str = Form(...)
+    image: UploadFile = File(...), operation_id: str = Form(...), params: str = Form("{}")
 ) -> ProcessResponse:
     """Validate, run, and encode one stateless registry-backed operation."""
     started_at = perf_counter()
     raw_bytes = await image.read()
     try:
+        parsed_params = loads(params)
+        if not isinstance(parsed_params, dict):
+            raise ValueError("Field 'params' must be a JSON object.")
+        validated_params = validate_params(operation_id, parsed_params)
         decoded = decode_upload(raw_bytes)
-        result, processing_ms = execute(operation_id, decoded.image)
+        result, processing_ms = execute(operation_id, decoded.image, validated_params)
+    except JSONDecodeError as error:
+        raise HTTPException(status_code=422, detail="Field 'params' must be valid JSON.") from error
     except ImageValidationError as error:
         raise HTTPException(status_code=error.status_code, detail=str(error)) from error
     except ValueError as error:
@@ -42,6 +49,7 @@ async def process(
 
     output_image = b64encode(encode_png(result.image)).decode("ascii")
     request_ms = (perf_counter() - started_at) * 1000
+    histogram = result.aux.get("histogram") if result.aux else None
     return ProcessResponse(
         operation_id=operation_id,
         output_image=output_image,
@@ -53,5 +61,7 @@ async def process(
             channels=3,
             source_format=decoded.source_format,
             source_file_size_bytes=decoded.file_size_bytes,
+            output_color_space=(result.metadata or {}).get("output_color_space"),
         ),
+        histogram=HistogramChart.model_validate(histogram) if histogram else None,
     )
