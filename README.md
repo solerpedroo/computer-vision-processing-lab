@@ -6,10 +6,10 @@ and FastAPI/OpenCV/NumPy on the backend.
 
 ## Project status
 
-The repository is intentionally at the **agentic-foundation gate**. Product code
-has not started: the next approved implementation step is Wave 0, as described
-in the delivery plan. This keeps a multi-agent implementation aligned before
-the frontend, API, and numerical code begin to diverge.
+**Waves 0–7 are complete** through algorithm comparison and metrics. The lab supports
+registry-driven processing via `POST /api/process`, dual-run `POST /api/compare`, and
+reference metrics via `POST /api/metrics`, with a **Compare** mode in the UI.
+Next: Wave 8 experiment export. See [`docs/agentic/workboard.md`](docs/agentic/workboard.md).
 
 ## Read first
 
@@ -22,8 +22,7 @@ the frontend, API, and numerical code begin to diverge.
 
 Image input and visualization; color spaces and histograms; spatial filters;
 edge detection; thresholding and morphology; FFT analysis; algorithm comparison;
-and reproducible experiment export. Wave 1 is implemented: upload a PNG/JPEG to
-validate the full identity-processing path before selecting a real operation.
+and reproducible experiment export (Wave 8+).
 
 ## Multi-agent workflow
 
