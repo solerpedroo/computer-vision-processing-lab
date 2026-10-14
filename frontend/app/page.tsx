@@ -45,7 +45,7 @@ export default function Home() {
 
   useEffect(() => {
     void getOperations()
-      .then((response) => setOperations(response.operations.filter((item) => ["color", "spatial", "edges", "morphology"].includes(item.module))))
+      .then((response) => setOperations(response.operations.filter((item) => ["color", "spatial", "edges", "morphology", "frequency"].includes(item.module))))
       .catch(() => setError("The operation registry is unavailable."));
   }, []);
 
