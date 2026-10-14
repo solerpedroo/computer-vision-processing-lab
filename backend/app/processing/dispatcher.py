@@ -17,6 +17,14 @@ from app.processing.color.operations import (
 )
 from app.processing.models import ProcessResult
 from app.processing.registry import get_operation_ids
+from app.processing.spatial.operations import (
+    spatial_bilateral_filter,
+    spatial_box_filter,
+    spatial_gaussian_blur,
+    spatial_laplacian,
+    spatial_median_filter,
+    spatial_sharpen,
+)
 
 Handler = Callable[..., ProcessResult]
 
@@ -31,6 +39,12 @@ HANDLERS: dict[str, Handler] = {
     "color_brightness": color_brightness,
     "color_contrast": color_contrast,
     "color_gamma": color_gamma,
+    "spatial_box_filter": spatial_box_filter,
+    "spatial_gaussian_blur": spatial_gaussian_blur,
+    "spatial_median_filter": spatial_median_filter,
+    "spatial_bilateral_filter": spatial_bilateral_filter,
+    "spatial_sharpen": spatial_sharpen,
+    "spatial_laplacian": spatial_laplacian,
 }
 
 
