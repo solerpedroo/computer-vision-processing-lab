@@ -1,52 +1,83 @@
 # Computer Vision Processing Lab
 
-An experimental web platform for learning and comparing classical digital image
-processing algorithms. Its planned stack is Next.js/TypeScript on the frontend
-and FastAPI/OpenCV/NumPy on the backend.
+Interactive web lab for **classical digital image processing**: color spaces,
+spatial filters, edge detection, morphology, FFT analysis, algorithm comparison,
+and reproducible experiment export.
 
-## Project status
+**Stack:** Next.js (TypeScript) · FastAPI · OpenCV · NumPy  
+**Status:** MVP complete (waves 0–9). See [`docs/mvp-acceptance.md`](docs/mvp-acceptance.md).
 
-**Waves 0–8 are complete** (through experiment export). The UI exports JSON/CSV/PNG
-bundles and imports experiment configs; CLI studies live in [`experiments/`](experiments/README.md).
-Next: **Wave 9** — E2E tests, deploy, portfolio polish. See [`docs/agentic/workboard.md`](docs/agentic/workboard.md).
+## Live demo
 
-## Read first
+Deploy the frontend to Vercel and the API to Railway using [`docs/deploy.md`](docs/deploy.md).
+Set `NEXT_PUBLIC_API_URL` to your Railway service URL.
 
-- [Project scope](docs/project-scope.md) — product, scientific, and technical requirements.
-- [Implementation plan](docs/implementation-plan.md) — waves, contracts, acceptance gates, and delivery order.
-- [Agent entrypoint](AGENTS.md) — required workflow for humans and coding agents.
-- [Agentic workboard](docs/agentic/workboard.md) — current task state.
+<!-- Replace with your deployed URL when published -->
+<!-- **Demo:** https://your-app.vercel.app -->
 
-## Intended modules
+## Features
 
-Image input and visualization; color spaces and histograms; spatial filters;
-edge detection; thresholding and morphology; FFT analysis; algorithm comparison;
-and reproducible experiment export (Wave 8+).
+- Registry-driven operations with validated parameters (`GET /api/operations`)
+- Multipart image processing with separate **processing** vs **request** timing
+- Compare two algorithms on the same upload with PSNR / SSIM / MSE
+- Export experiment JSON, CSV metrics, and PNG snapshots; import JSON to restore config
+- CLI studies under [`experiments/`](experiments/README.md) reusing the same Python handlers
 
-## Multi-agent workflow
+## Architecture
 
-Work proceeds as **Planner → Implementer → Test Engineer → Reviewer**. Durable
-task cards, architecture decisions, and factual handoffs preserve context across
-agents. See [`AGENTS.md`](AGENTS.md) and [`docs/agentic/`](docs/agentic/).
+```text
+Browser (Next.js)  →  /api/*  →  FastAPI routes  →  dispatcher  →  pure OpenCV/NumPy
+                         ↑
+              registry.yaml (single source of operation definitions)
+```
 
-## Local development
+Details: [`docs/architecture.md`](docs/architecture.md) · API: [`docs/api-contract.md`](docs/api-contract.md)
 
-The Wave 0 shell runs with Python 3.11+ and Node 24+:
+## Quick start
+
+**Requirements:** Python 3.11+, Node 24+
 
 ```bash
 python -m venv .venv
 .venv/bin/python -m pip install -e "./backend[dev]"
-.venv/bin/uvicorn app.main:app --app-dir backend --reload
-```
 
-In another terminal:
+# Terminal 1 — API
+.venv/bin/uvicorn app.main:app --app-dir backend --reload --port 8000
 
-```bash
+# Terminal 2 — UI
 cd frontend
-cp .env.example .env.local
+cp .env.example .env.local   # NEXT_PUBLIC_API_URL=http://localhost:8000
 npm ci
 npm run dev
 ```
 
-Run the full checks with `ruff check backend`, `pytest backend`, `npm run lint`,
-`npm run test`, and `npm run build` (the last three from `frontend/`).
+Open [http://localhost:3000](http://localhost:3000). Optional API-only container:
+
+```bash
+docker compose up --build
+```
+
+## Quality checks
+
+```bash
+.venv/bin/ruff check backend
+.venv/bin/pytest backend
+cd frontend && npm run lint && npm run test && npm run build
+cd frontend && npx playwright install chromium && npm run test:e2e
+```
+
+CI runs backend, frontend unit tests, and Playwright on GitHub Actions.
+
+## Documentation map
+
+| Document | Purpose |
+|----------|---------|
+| [`docs/project-scope.md`](docs/project-scope.md) | Product and scientific scope |
+| [`docs/implementation-plan.md`](docs/implementation-plan.md) | Delivery waves |
+| [`docs/deploy.md`](docs/deploy.md) | Vercel + Railway |
+| [`docs/demo-storyboard.md`](docs/demo-storyboard.md) | Short demo video outline |
+| [`AGENTS.md`](AGENTS.md) | Multi-agent development protocol |
+
+## License
+
+Portfolio / academic use — add a license file before public redistribution if required.
