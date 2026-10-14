@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { getHealth, processImage } from "./api";
+import { compareOperations, getHealth, processImage } from "./api";
 
 describe("API client", () => {
   afterEach(() => {
@@ -46,5 +46,23 @@ describe("API client", () => {
     expect(fetchMock.mock.calls[0][0]).toBe("http://localhost:8000/api/process");
     expect(options.method).toBe("POST");
     expect(options.body).toBeInstanceOf(FormData);
+  });
+
+  it("posts compare configs as multipart json fields", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          result_a: { operation_id: "color_noop", output_image: "a", processing_ms: 1 },
+          result_b: { operation_id: "color_noop", output_image: "b", processing_ms: 2 },
+          request_ms: 3,
+          metadata: { width: 1, height: 1, channels: 3, source_format: "PNG", source_file_size_bytes: 1 },
+        }),
+        { status: 200 },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const file = new File(["png"], "fixture.png", { type: "image/png" });
+    await compareOperations(file, { operation_id: "color_noop" }, { operation_id: "color_noop" });
+    expect(fetchMock.mock.calls[0][0]).toBe("http://localhost:8000/api/compare");
   });
 });
