@@ -2,19 +2,19 @@
 
 /* eslint-disable @next/next/no-img-element */
 
-import { ChangeEvent, DragEvent, useRef, useState } from "react";
+import { ChangeEvent, DragEvent, useEffect, useRef, useState } from "react";
 
-import { processImage } from "../lib/api";
+import { Histogram } from "../components/histogram";
+import { getOperations, processImage, type HistogramChart, type Operation } from "../lib/api";
 import { formatBytes, imageMetadata, type ImageMetadata } from "../lib/image";
 
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
-const ACCEPTED_TYPES = new Set(["image/png", "image/jpeg"]);
 
-function isAcceptedImage(file: File): boolean {
-  return ACCEPTED_TYPES.has(file.type) || /\.(png|jpe?g)$/i.test(file.name);
+function accepted(file: File): boolean {
+  return ["image/png", "image/jpeg"].includes(file.type) || /\.(png|jpe?g)$/i.test(file.name);
 }
 
-function readDimensions(source: string): Promise<{ width: number; height: number }> {
+function dimensions(source: string): Promise<{ width: number; height: number }> {
   return new Promise((resolve, reject) => {
     const image = new Image();
     image.onload = () => resolve({ width: image.naturalWidth, height: image.naturalHeight });
@@ -23,153 +23,90 @@ function readDimensions(source: string): Promise<{ width: number; height: number
   });
 }
 
+function operationDefaults(operation?: Operation): Record<string, number | string> {
+  return Object.fromEntries(operation?.params.map((item) => [item.name, item.default]) ?? []);
+}
+
 export default function Home() {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [originalImage, setOriginalImage] = useState<string | null>(null);
-  const [processedImage, setProcessedImage] = useState<string | null>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const [original, setOriginal] = useState<string | null>(null);
+  const [processed, setProcessed] = useState<string | null>(null);
   const [metadata, setMetadata] = useState<ImageMetadata | null>(null);
+  const [operations, setOperations] = useState<readonly Operation[]>([]);
+  const [operationId, setOperationId] = useState("color_noop");
+  const [params, setParams] = useState<Record<string, number | string>>({});
+  const [histogram, setHistogram] = useState<HistogramChart | null>(null);
+  const [outputSpace, setOutputSpace] = useState<string | null>(null);
   const [zoom, setZoom] = useState(100);
-  const [processingMs, setProcessingMs] = useState<number | null>(null);
-  const [requestMs, setRequestMs] = useState<number | null>(null);
+  const [timing, setTiming] = useState<{ processing: number; request: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [busy, setBusy] = useState(false);
 
-  async function selectFile(file: File | undefined) {
-    if (!file) {
-      setIsProcessing(false);
-      return;
-    }
+  useEffect(() => {
+    void getOperations()
+      .then((response) => setOperations(response.operations.filter((item) => item.module === "color")))
+      .catch(() => setError("The operation registry is unavailable."));
+  }, []);
+
+  const selectedOperation = operations.find((item) => item.id === operationId);
+
+  async function apply(selectedFile: File, nextOperation = operationId, nextParams = params) {
+    setBusy(true);
     setError(null);
-    if (!isAcceptedImage(file)) {
-      setError("Choose a PNG or JPEG image.");
-      return;
-    }
-    if (file.size > MAX_UPLOAD_BYTES) {
-      setError("Choose an image smaller than 10 MiB.");
-      return;
-    }
-
-    const previewUrl = URL.createObjectURL(file);
+    setProcessed(null);
     try {
-      const dimensions = await readDimensions(previewUrl);
-      if (dimensions.width > 4096 || dimensions.height > 4096) {
-        throw new Error("Choose an image no larger than 4096 × 4096 pixels.");
-      }
-      const response = await processImage(file);
-      setOriginalImage((previous) => {
-        if (previous) URL.revokeObjectURL(previous);
-        return previewUrl;
-      });
-      setProcessedImage(`data:image/png;base64,${response.output_image}`);
-      setMetadata(imageMetadata(file, dimensions));
-      setProcessingMs(response.processing_ms);
-      setRequestMs(response.request_ms);
-      setZoom(100);
+      const response = await processImage(selectedFile, nextOperation, nextParams);
+      setProcessed(`data:image/png;base64,${response.output_image}`);
+      setHistogram(response.histogram);
+      setOutputSpace(response.metadata.output_color_space);
+      setTiming({ processing: response.processing_ms, request: response.request_ms });
     } catch (reason) {
-      URL.revokeObjectURL(previewUrl);
+      setHistogram(null);
       setError(reason instanceof Error ? reason.message : "Image processing failed.");
     } finally {
-      setIsProcessing(false);
+      setBusy(false);
     }
   }
 
-  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
-    setIsProcessing(true);
-    void selectFile(event.target.files?.[0]);
+  async function selectFile(nextFile: File | undefined) {
+    if (!nextFile) { setBusy(false); return; }
+    if (!accepted(nextFile)) { setError("Choose a PNG or JPEG image."); setBusy(false); return; }
+    if (nextFile.size > MAX_UPLOAD_BYTES) { setError("Choose an image smaller than 10 MiB."); setBusy(false); return; }
+    const preview = URL.createObjectURL(nextFile);
+    try {
+      const size = await dimensions(preview);
+      if (size.width > 4096 || size.height > 4096) throw new Error("Choose an image no larger than 4096 × 4096 pixels.");
+      setOriginal((previous) => { if (previous) URL.revokeObjectURL(previous); return preview; });
+      setFile(nextFile);
+      setMetadata(imageMetadata(nextFile, size));
+      setZoom(100);
+      await apply(nextFile);
+    } catch (reason) {
+      URL.revokeObjectURL(preview);
+      setError(reason instanceof Error ? reason.message : "Image processing failed.");
+      setBusy(false);
+    }
   }
 
-  function handleDrop(event: DragEvent<HTMLDivElement>) {
-    event.preventDefault();
-    setIsProcessing(true);
-    void selectFile(event.dataTransfer.files[0]);
+  function selectOperation(nextId: string) {
+    const nextOperation = operations.find((item) => item.id === nextId);
+    setOperationId(nextId);
+    setParams(operationDefaults(nextOperation));
   }
 
   function reset() {
-    if (originalImage) URL.revokeObjectURL(originalImage);
-    setOriginalImage(null);
-    setProcessedImage(null);
-    setMetadata(null);
-    setProcessingMs(null);
-    setRequestMs(null);
-    setZoom(100);
-    setError(null);
+    if (original) URL.revokeObjectURL(original);
+    setFile(null); setOriginal(null); setProcessed(null); setMetadata(null); setHistogram(null); setTiming(null); setError(null); setZoom(100);
     if (inputRef.current) inputRef.current.value = "";
   }
 
-  return (
-    <main className="lab-shell">
-      <header className="lab-header">
-        <div>
-          <p className="eyebrow">Computer Vision Processing Lab</p>
-          <h1>Image input</h1>
-        </div>
-        {originalImage ? <button onClick={reset}>Reset image</button> : null}
-      </header>
-
-      <section className="upload-section" aria-label="Image upload">
-        <div
-          className="dropzone"
-          onDragOver={(event) => event.preventDefault()}
-          onDrop={handleDrop}
-        >
-          <p>Drop a PNG or JPEG here</p>
-          <span>Maximum 10 MiB · 4096 × 4096 pixels</span>
-          <label className="button-like" htmlFor="image-file">
-            Browse image
-          </label>
-          <input
-            ref={inputRef}
-            id="image-file"
-            type="file"
-            accept="image/png,image/jpeg"
-            onChange={handleFileChange}
-          />
-        </div>
-        {error ? <p className="error" role="alert">{error}</p> : null}
-        {isProcessing ? <p className="status">Validating and processing image…</p> : null}
-      </section>
-
-      {originalImage && processedImage && metadata ? (
-        <>
-          <section className="controls" aria-label="Viewer controls">
-            <label htmlFor="zoom">Zoom: {zoom}%</label>
-            <input
-              id="zoom"
-              type="range"
-              min="50"
-              max="200"
-              value={zoom}
-              onChange={(event) => setZoom(Number(event.target.value))}
-            />
-            <a className="button-like" href={processedImage} download="processed.png">
-              Download PNG
-            </a>
-          </section>
-          <section className="viewers" aria-label="Image comparison">
-            <ImageViewer label="Original" source={originalImage} zoom={zoom} />
-            <ImageViewer label="Processed · Identity" source={processedImage} zoom={zoom} />
-          </section>
-          <section className="details" aria-label="Image information">
-            <div><span>Dimensions</span><strong>{metadata.width} × {metadata.height}</strong></div>
-            <div><span>Channels</span><strong>{metadata.channels} RGB</strong></div>
-            <div><span>Source</span><strong>{metadata.mediaType}</strong></div>
-            <div><span>File size</span><strong>{formatBytes(metadata.fileSizeBytes)}</strong></div>
-            <div><span>Processing</span><strong>{processingMs?.toFixed(2)} ms</strong></div>
-            <div><span>Total request</span><strong>{requestMs?.toFixed(2)} ms</strong></div>
-          </section>
-        </>
-      ) : null}
-    </main>
-  );
+  return <main className="lab-shell">
+    <header className="lab-header"><div><p className="eyebrow">Computer Vision Processing Lab</p><h1>Color processing</h1></div>{original ? <button onClick={reset}>Reset image</button> : null}</header>
+    <section className="upload-section"><div className="dropzone" onDragOver={(event) => event.preventDefault()} onDrop={(event: DragEvent<HTMLDivElement>) => { event.preventDefault(); setBusy(true); void selectFile(event.dataTransfer.files[0]); }}><p>Drop a PNG or JPEG here</p><span>Maximum 10 MiB · 4096 × 4096 pixels</span><label className="button-like" htmlFor="image-file">Browse image</label><input ref={inputRef} id="image-file" type="file" accept="image/png,image/jpeg" onChange={(event: ChangeEvent<HTMLInputElement>) => { setBusy(true); void selectFile(event.target.files?.[0]); }} /></div>{error ? <p className="error" role="alert">{error}</p> : null}{busy ? <p className="status">Processing image…</p> : null}</section>
+    {file && selectedOperation ? <section className="operation-panel"><div><label htmlFor="operation">Operation</label><select id="operation" value={operationId} onChange={(event) => selectOperation(event.target.value)}>{operations.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select><p>{selectedOperation.description}</p></div><div className="parameter-controls">{selectedOperation.params.map((parameter) => parameter.type === "enum" ? <label key={parameter.name}>{parameter.name}<select value={String(params[parameter.name])} onChange={(event) => setParams({ ...params, [parameter.name]: event.target.value })}>{parameter.enum?.map((choice) => <option key={choice}>{choice}</option>)}</select></label> : <label key={parameter.name}>{parameter.name}: {params[parameter.name]}<input type="range" min={parameter.min} max={parameter.max} step={parameter.step} value={Number(params[parameter.name])} onChange={(event) => setParams({ ...params, [parameter.name]: Number(event.target.value) })} /></label>)}</div><button disabled={busy} onClick={() => void apply(file)}>Apply operation</button></section> : null}
+    {original && processed && metadata ? <><section className="controls"><label htmlFor="zoom">Zoom: {zoom}%</label><input id="zoom" type="range" min="50" max="200" value={zoom} onChange={(event) => setZoom(Number(event.target.value))} /><a className="button-like" href={processed} download="processed.png">Download PNG</a></section><section className="viewers"><Viewer label="Original · RGB" source={original} zoom={zoom} /><Viewer label={`Processed · ${outputSpace ?? "RGB"}`} source={processed} zoom={zoom} /></section><section className="details"><div><span>Dimensions</span><strong>{metadata.width} × {metadata.height}</strong></div><div><span>Channels</span><strong>{metadata.channels} RGB</strong></div><div><span>Source</span><strong>{metadata.mediaType}</strong></div><div><span>File size</span><strong>{formatBytes(metadata.fileSizeBytes)}</strong></div><div><span>Processing</span><strong>{timing?.processing.toFixed(2)} ms</strong></div><div><span>Total request</span><strong>{timing?.request.toFixed(2)} ms</strong></div></section>{histogram ? <section className="histogram-panel"><Histogram chart={histogram} /></section> : null}</> : null}
+  </main>;
 }
 
-function ImageViewer({ label, source, zoom }: { label: string; source: string; zoom: number }) {
-  return (
-    <article className="viewer">
-      <h2>{label}</h2>
-      <div className="image-frame">
-        <img src={source} alt={label} style={{ transform: `scale(${zoom / 100})` }} />
-      </div>
-    </article>
-  );
-}
+function Viewer({ label, source, zoom }: { label: string; source: string; zoom: number }) { return <article className="viewer"><h2>{label}</h2><div className="image-frame"><img src={source} alt={label} style={{ transform: `scale(${zoom / 100})` }} /></div></article>; }
