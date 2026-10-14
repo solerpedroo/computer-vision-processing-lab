@@ -15,13 +15,15 @@ export function ViewerPanel({ label, source, zoom }: ViewerPanelProps) {
           {zoom}%
         </span>
       </header>
-      <div className="surface-inset m-3 flex min-h-[220px] flex-1 items-center justify-center overflow-auto p-2 sm:min-h-[280px]">
-        <img
-          src={source}
-          alt={label}
-          className="max-h-[420px] max-w-full origin-center transition-transform duration-200"
-          style={{ transform: `scale(${zoom / 100})` }}
-        />
+      <div className="surface-inset m-3 min-h-[220px] overflow-auto p-3 sm:min-h-[280px]">
+        <div className="mx-auto w-fit min-w-min">
+          <img
+            src={source}
+            alt={label}
+            className="block h-auto max-w-none transition-[width] duration-200"
+            style={{ width: `${zoom}%` }}
+          />
+        </div>
       </div>
     </article>
   );
