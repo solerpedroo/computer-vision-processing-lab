@@ -50,6 +50,6 @@ def test_decode_upload_rejects_dimensions_over_the_limit() -> None:
     assert error.value.status_code == 413
 
 
-def test_encode_png_requires_canonical_rgb_uint8() -> None:
-    with pytest.raises(ValueError, match="RGB uint8"):
-        encode_png(np.zeros((2, 2), dtype=np.uint8))
+def test_encode_png_rejects_non_uint8_outputs() -> None:
+    with pytest.raises(ValueError, match="RGB or grayscale uint8"):
+        encode_png(np.zeros((2, 2), dtype=np.float32))
