@@ -76,6 +76,25 @@ export function getOperations(): Promise<OperationsResponse> {
   return request<OperationsResponse>("/api/operations");
 }
 
+export type OperationConfig = {
+  operation_id: string;
+  params?: Record<string, number | string>;
+};
+
+export type CompareResponse = {
+  result_a: { operation_id: string; output_image: string; processing_ms: number };
+  result_b: { operation_id: string; output_image: string; processing_ms: number };
+  request_ms: number;
+  metadata: ProcessResponse["metadata"];
+};
+
+export type MetricsResponse = {
+  mse: number;
+  psnr: number | null;
+  ssim: number;
+  request_ms: number;
+};
+
 export function processImage(
   file: File,
   operationId = "color_noop",
@@ -86,4 +105,23 @@ export function processImage(
   payload.append("operation_id", operationId);
   payload.append("params", JSON.stringify(params));
   return requestForm<ProcessResponse>("/api/process", payload);
+}
+
+export function compareOperations(
+  file: File,
+  operationA: OperationConfig,
+  operationB: OperationConfig,
+): Promise<CompareResponse> {
+  const payload = new FormData();
+  payload.append("image", file);
+  payload.append("operation_a", JSON.stringify(operationA));
+  payload.append("operation_b", JSON.stringify(operationB));
+  return requestForm<CompareResponse>("/api/compare", payload);
+}
+
+export function computeMetrics(reference: File, candidate: File): Promise<MetricsResponse> {
+  const payload = new FormData();
+  payload.append("reference_image", reference);
+  payload.append("candidate_image", candidate);
+  return requestForm<MetricsResponse>("/api/metrics", payload);
 }
