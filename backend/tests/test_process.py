@@ -45,6 +45,7 @@ def test_process_noop_returns_a_png_and_separate_timing() -> None:
         "source_format": "PNG",
         "source_file_size_bytes": len(source),
         "output_color_space": None,
+        "connected_components": None,
     }
     assert b64decode(payload["output_image"]).startswith(b"\x89PNG\r\n\x1a\n")
 
