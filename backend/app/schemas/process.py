@@ -9,6 +9,18 @@ class ImageMetadata(BaseModel):
     channels: Literal[3]
     source_format: str
     source_file_size_bytes: int = Field(ge=0)
+    output_color_space: str | None = None
+
+
+class HistogramSeries(BaseModel):
+    name: str
+    x: list[int]
+    counts: list[int]
+
+
+class HistogramChart(BaseModel):
+    title: str
+    series: list[HistogramSeries]
 
 
 class ProcessResponse(BaseModel):
@@ -17,3 +29,4 @@ class ProcessResponse(BaseModel):
     processing_ms: float = Field(ge=0)
     request_ms: float = Field(ge=0)
     metadata: ImageMetadata
+    histogram: HistogramChart | None = None
