@@ -69,3 +69,11 @@ series names. RGB and grayscale outputs use component/intensity values in
 `[0, 255]`. HSV and Lab previews pack native components into PNG slots for
 inspection; they are **not** RGB color renderings. Their chart labels and channel
 views retain the corresponding native component semantics.
+
+## Spatial operations
+
+The registry also exposes `spatial_box_filter`, `spatial_gaussian_blur`,
+`spatial_median_filter`, `spatial_bilateral_filter`, `spatial_sharpen`, and
+`spatial_laplacian`. Kernel and bilateral diameter parameters must be odd, and
+all sigma/amount bounds are validated from the same registry metadata used by
+the frontend controls.
