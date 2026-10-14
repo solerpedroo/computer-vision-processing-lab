@@ -1,0 +1,10 @@
+{
+  "seed": 42,
+  "gaussian_sigma": 20,
+  "impulse_fraction": 0.02,
+  "filters": [
+    { "operation_id": "spatial_gaussian_blur", "params": { "kernel_size": 5, "sigma": 1.2 } },
+    { "operation_id": "spatial_median_filter", "params": { "kernel_size": 3 } },
+    { "operation_id": "spatial_bilateral_filter", "params": { "diameter": 5, "sigma_color": 50, "sigma_space": 50 } }
+  ]
+}
