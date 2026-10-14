@@ -150,3 +150,47 @@ operations:
     requires_grayscale: false
     params:
       - { name: kernel_size, type: integer, default: 3, min: 3, max: 31, step: 2, odd: true }
+  - id: edge_sobel_x
+    module: edges
+    name: Sobel X
+    description: Detects vertical intensity transitions.
+    output_kind: mask
+    requires_grayscale: true
+    params: [ { name: kernel_size, type: integer, default: 3, min: 3, max: 7, step: 2, odd: true } ]
+  - id: edge_sobel_y
+    module: edges
+    name: Sobel Y
+    description: Detects horizontal intensity transitions.
+    output_kind: mask
+    requires_grayscale: true
+    params: [ { name: kernel_size, type: integer, default: 3, min: 3, max: 7, step: 2, odd: true } ]
+  - id: edge_sobel_magnitude
+    module: edges
+    name: Sobel magnitude
+    description: Combines horizontal and vertical Sobel gradients.
+    output_kind: mask
+    requires_grayscale: true
+    params: [ { name: kernel_size, type: integer, default: 3, min: 3, max: 7, step: 2, odd: true } ]
+  - id: edge_prewitt
+    module: edges
+    name: Prewitt
+    description: Computes a first-derivative Prewitt edge magnitude.
+    output_kind: mask
+    requires_grayscale: true
+    params: []
+  - id: edge_laplacian
+    module: edges
+    name: Edge Laplacian
+    description: Computes an absolute second-derivative edge response.
+    output_kind: mask
+    requires_grayscale: true
+    params: [ { name: kernel_size, type: integer, default: 3, min: 3, max: 7, step: 2, odd: true } ]
+  - id: edge_canny
+    module: edges
+    name: Canny
+    description: Produces a binary edge map from dual thresholds.
+    output_kind: mask
+    requires_grayscale: true
+    params:
+      - { name: low_threshold, type: integer, default: 50, min: 0, max: 254, step: 1 }
+      - { name: high_threshold, type: integer, default: 150, min: 1, max: 255, step: 1 }
