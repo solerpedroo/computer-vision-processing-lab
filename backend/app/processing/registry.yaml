@@ -194,3 +194,54 @@ operations:
     params:
       - { name: low_threshold, type: integer, default: 50, min: 0, max: 254, step: 1 }
       - { name: high_threshold, type: integer, default: 150, min: 1, max: 255, step: 1 }
+  - id: morph_binary_threshold
+    module: morphology
+    name: Binary threshold
+    description: Converts grayscale intensity into a binary mask.
+    output_kind: mask
+    requires_grayscale: true
+    params: [ { name: threshold, type: integer, default: 127, min: 0, max: 255, step: 1 } ]
+  - id: morph_adaptive_threshold
+    module: morphology
+    name: Adaptive threshold
+    description: Uses local Gaussian neighborhoods to create a binary mask.
+    output_kind: mask
+    requires_grayscale: true
+    params:
+      - { name: block_size, type: integer, default: 11, min: 3, max: 51, step: 2, odd: true }
+      - { name: offset, type: integer, default: 2, min: -30, max: 30, step: 1 }
+  - id: morph_otsu_threshold
+    module: morphology
+    name: Otsu threshold
+    description: Selects a global threshold from the intensity histogram.
+    output_kind: mask
+    requires_grayscale: true
+    params: []
+  - id: morph_erode
+    module: morphology
+    name: Erosion
+    description: Shrinks bright binary regions using a rectangular kernel.
+    output_kind: mask
+    requires_grayscale: true
+    params: [ { name: kernel_size, type: integer, default: 3, min: 3, max: 31, step: 2, odd: true } ]
+  - id: morph_dilate
+    module: morphology
+    name: Dilation
+    description: Expands bright binary regions using a rectangular kernel.
+    output_kind: mask
+    requires_grayscale: true
+    params: [ { name: kernel_size, type: integer, default: 3, min: 3, max: 31, step: 2, odd: true } ]
+  - id: morph_opening
+    module: morphology
+    name: Opening
+    description: Removes small bright specks through erosion then dilation.
+    output_kind: mask
+    requires_grayscale: true
+    params: [ { name: kernel_size, type: integer, default: 3, min: 3, max: 31, step: 2, odd: true } ]
+  - id: morph_closing
+    module: morphology
+    name: Closing
+    description: Fills small dark holes through dilation then erosion.
+    output_kind: mask
+    requires_grayscale: true
+    params: [ { name: kernel_size, type: integer, default: 3, min: 3, max: 31, step: 2, odd: true } ]
