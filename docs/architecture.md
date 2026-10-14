@@ -1,4 +1,4 @@
-# Architecture — Wave 0 baseline
+# Architecture — product baseline (through Wave 6)
 
 ## Boundary map
 
@@ -24,8 +24,7 @@ color conversion, and border behavior.
 `backend/app/processing/registry.yaml` is the canonical operation contract. It
 will supply stable IDs, English labels, descriptions, output kinds, constraints,
 and controls to the API and UI. The dispatcher integrity assertion rejects either
-a registry operation without a handler or an orphaned handler. The empty list is
-intentional during Wave 0.
+a registry operation without a handler or an orphaned handler.
 
 ## Timing and state
 
@@ -73,3 +72,25 @@ Edge operations convert canonical RGB input to grayscale internally and return
 grayscale `uint8` responses. Sobel, Prewitt, and Laplacian responses are
 absolute magnitudes; Canny returns a binary `0`/`255` edge map and rejects
 reversed thresholds.
+
+## Wave 5 thresholding & morphology
+
+Morphology handlers operate on grayscale-derived binary masks. Threshold operations
+produce `{0, 255}` masks; morphological filters use odd square structuring elements.
+When the output is a binary mask, processors attach `connected_components` in result
+metadata; the API maps this into `ProcessResponse.metadata` for the UI metrics strip.
+
+## Wave 6 frequency domain
+
+Grayscale input is converted to normalized float for FFT. The spectrum operation
+returns a log-magnitude, fftshift-centered visualization (`output_kind: spectrum`).
+Gaussian LPF/HPF multiply the shifted spectrum by smooth radial masks, inverse-transform,
+and re-quantize to `uint8`. Numerical acceptance tests compare frequency Gaussian LPF
+against a spatial Gaussian low-pass on the same patch (see implementation plan §5.6).
+
+## Wave 7 comparison & metrics
+
+Pure metric functions live in `backend/app/metrics/` without FastAPI imports.
+`POST /api/compare` decodes once and invokes the dispatcher twice. `POST /api/metrics`
+decodes two uploads and returns MSE, PSNR (nullable), and SSIM. The frontend **Compare**
+mode runs both arms, shows three viewers, and fetches metrics against the original upload.
