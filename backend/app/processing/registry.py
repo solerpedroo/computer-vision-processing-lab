@@ -56,5 +56,7 @@ def validate_params(operation_id: str, supplied: dict[str, object]) -> dict[str,
             raise ValueError(
                 f"Parameter '{name}' must be between {definition['min']} and {definition['max']}."
             )
+        if definition.get("odd") and value % 2 == 0:
+            raise ValueError(f"Parameter '{name}' must be odd.")
         validated[name] = value
     return validated
