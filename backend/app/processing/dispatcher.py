@@ -15,6 +15,14 @@ from app.processing.color.operations import (
     color_hsv,
     color_lab,
 )
+from app.processing.edges.operations import (
+    canny,
+    edge_laplacian,
+    prewitt,
+    sobel_magnitude,
+    sobel_x,
+    sobel_y,
+)
 from app.processing.models import ProcessResult
 from app.processing.registry import get_operation_ids
 from app.processing.spatial.operations import (
@@ -45,6 +53,8 @@ HANDLERS: dict[str, Handler] = {
     "spatial_bilateral_filter": spatial_bilateral_filter,
     "spatial_sharpen": spatial_sharpen,
     "spatial_laplacian": spatial_laplacian,
+    "edge_sobel_x": sobel_x, "edge_sobel_y": sobel_y, "edge_sobel_magnitude": sobel_magnitude,
+    "edge_prewitt": prewitt, "edge_laplacian": edge_laplacian, "edge_canny": canny,
 }
 
 
