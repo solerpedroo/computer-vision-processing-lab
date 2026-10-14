@@ -5,6 +5,10 @@
 import { ChangeEvent, DragEvent, useEffect, useRef, useState } from "react";
 
 import { Histogram } from "../components/histogram";
+import { OperationPicker } from "../components/operation-picker";
+import { StatGrid } from "../components/stat-grid";
+import { ViewerPanel } from "../components/viewer-panel";
+import { Spinner } from "../components/ui/spinner";
 import {
   compareOperations,
   computeMetrics,
@@ -79,6 +83,7 @@ export default function Home() {
   const [metricsB, setMetricsB] = useState<MetricsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
 
   useEffect(() => {
     void getOperations()
@@ -288,6 +293,7 @@ export default function Home() {
         <label key={parameter.name}>
           {parameter.name}
           <select
+            className="select"
             value={String(values[parameter.name])}
             onChange={(event) => onChange({ ...values, [parameter.name]: event.target.value })}
           >
@@ -297,8 +303,11 @@ export default function Home() {
           </select>
         </label>
       ) : (
-        <label key={parameter.name}>
-          {parameter.name}: {values[parameter.name]}
+        <label key={parameter.name} className="param-slider">
+          <span>
+            {parameter.name}{" "}
+            <span className="param-value">{values[parameter.name]}</span>
+          </span>
           <input
             type="range"
             min={parameter.min}
@@ -313,38 +322,96 @@ export default function Home() {
   }
 
   return (
-    <main className="lab-shell">
+    <main className="lab-shell" id="main-content">
       <header className="lab-header">
-        <div>
+        <div className="lab-brand">
           <p className="eyebrow">Computer Vision Processing Lab</p>
           <h1>{mode === "process" ? "Image processing" : "Algorithm comparison"}</h1>
+          <p className="lab-subtitle">
+            Upload an image, tune registry-backed operations, and inspect timing, histograms, and quantitative metrics in
+            one workspace.
+          </p>
         </div>
-        <div className="mode-switch">
-          <button type="button" className={mode === "process" ? "active" : ""} onClick={() => setMode("process")}>
-            Process
-          </button>
-          <button type="button" className={mode === "compare" ? "active" : ""} onClick={() => setMode("compare")}>
-            Compare
-          </button>
+        <div className="lab-header-actions">
+          <div className="mode-switch" role="group" aria-label="Lab mode">
+            <button
+              type="button"
+              className={mode === "process" ? "active" : ""}
+              aria-pressed={mode === "process"}
+              onClick={() => setMode("process")}
+            >
+              Process
+            </button>
+            <button
+              type="button"
+              className={mode === "compare" ? "active" : ""}
+              aria-pressed={mode === "compare"}
+              onClick={() => setMode("compare")}
+            >
+              Compare
+            </button>
+          </div>
           {original ? (
-            <button type="button" onClick={reset}>
+            <button type="button" className="btn btn-ghost" onClick={reset}>
               Reset image
             </button>
           ) : null}
         </div>
       </header>
 
+      {!file ? (
+        <ol className="workflow-steps" aria-label="Getting started">
+          <li>
+            <span className="step-index">1</span>
+            <div>
+              <strong>Upload an image</strong>
+              <span>PNG or JPEG up to 10 MiB and 4096 × 4096 px.</span>
+            </div>
+          </li>
+          <li>
+            <span className="step-index">2</span>
+            <div>
+              <strong>Choose an operation</strong>
+              <span>Parameters and bounds come from the server registry.</span>
+            </div>
+          </li>
+          <li>
+            <span className="step-index">3</span>
+            <div>
+              <strong>Inspect results</strong>
+              <span>Side-by-side views, timing, histograms, and export bundles.</span>
+            </div>
+          </li>
+        </ol>
+      ) : null}
+
       <section className="upload-section">
         <div
-          className="dropzone"
-          onDragOver={(event) => event.preventDefault()}
+          className={`dropzone${dragOver ? " is-dragover" : ""}`}
+          onDragEnter={(event) => {
+            event.preventDefault();
+            setDragOver(true);
+          }}
+          onDragOver={(event) => {
+            event.preventDefault();
+            setDragOver(true);
+          }}
+          onDragLeave={(event) => {
+            event.preventDefault();
+            if (event.currentTarget.contains(event.relatedTarget as Node | null)) return;
+            setDragOver(false);
+          }}
           onDrop={(event: DragEvent<HTMLDivElement>) => {
             event.preventDefault();
+            setDragOver(false);
             setBusy(true);
             void selectFile(event.dataTransfer.files[0]);
           }}
         >
-          <p>Drop a PNG or JPEG here</p>
+          <div className="dropzone-icon" aria-hidden="true">
+            ↑
+          </div>
+          <p>{file ? "Replace image" : "Drop a PNG or JPEG here"}</p>
           <span>Maximum 10 MiB · 4096 × 4096 pixels</span>
           <label className="button-like" htmlFor="image-file">
             Browse image
@@ -360,20 +427,29 @@ export default function Home() {
             }}
           />
         </div>
-        {error ? (
-          <p className="error" role="alert">
-            {error}
-          </p>
-        ) : null}
-        {busy ? <p className="status">Processing image…</p> : null}
-        {importNotice ? <p className="status">{importNotice}</p> : null}
+        <div className="feedback-row">
+          {error ? (
+            <p className="error" role="alert">
+              {error}
+            </p>
+          ) : null}
+          {busy ? (
+            <p className="status">
+              <Spinner size="sm" label="Processing image" />
+              Processing image…
+            </p>
+          ) : null}
+          {!busy && importNotice ? <p className="status status-notice">{importNotice}</p> : null}
+        </div>
       </section>
 
-      <section className="export-panel" aria-label="Experiment export and import">
-        <h2>Experiment export</h2>
-        <p>Download JSON parameters, CSV metrics/timing, and PNG snapshots from the current session.</p>
+      <section className="export-panel panel" aria-label="Experiment export and import">
+        <div className="panel-header">
+          <h2>Experiment export</h2>
+          <p>Download JSON parameters, CSV metrics or timing, and PNG snapshots from the current session.</p>
+        </div>
         <div className="export-actions">
-          <button type="button" className="button-like" onClick={() => importRef.current?.click()}>
+          <button type="button" className="btn btn-secondary" onClick={() => importRef.current?.click()}>
             Import experiment JSON
           </button>
           <input
@@ -387,55 +463,52 @@ export default function Home() {
       </section>
 
       {file && mode === "process" && selectedOperation ? (
-        <section className="operation-panel">
+        <section className="operation-panel panel">
           <div>
-            <label htmlFor="operation">Operation</label>
-            <select id="operation" value={operationId} onChange={(event) => selectOperation(event.target.value)}>
-              {operations.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </select>
-            <p>{selectedOperation.description}</p>
+            <OperationPicker
+              id="operation"
+              label="Operation"
+              operations={operations}
+              value={operationId}
+              onChange={selectOperation}
+            />
+            <p className="operation-meta">{selectedOperation.description}</p>
           </div>
           <div className="parameter-controls">{renderParams(selectedOperation, params, setParams)}</div>
-          <button type="button" disabled={busy} onClick={() => void apply(file)}>
-            Apply operation
+          <button type="button" className="btn btn-primary" disabled={busy} onClick={() => void apply(file)}>
+            {busy ? "Applying…" : "Apply operation"}
           </button>
         </section>
       ) : null}
 
       {file && mode === "compare" && selectedOperation && selectedOperationB ? (
-        <section className="operation-panel compare-panel">
+        <section className="operation-panel compare-panel panel">
           <div className="compare-config">
             <div>
-              <label htmlFor="operation-a">Operation A</label>
-              <select id="operation-a" value={operationId} onChange={(event) => selectOperation(event.target.value)}>
-                {operations.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
-              </select>
+              <OperationPicker
+                id="operation-a"
+                label="Operation A"
+                operations={operations}
+                value={operationId}
+                onChange={selectOperation}
+              />
               <div className="parameter-controls">{renderParams(selectedOperation, params, setParams)}</div>
             </div>
             <div>
-              <label htmlFor="operation-b">Operation B</label>
-              <select id="operation-b" value={operationIdB} onChange={(event) => selectOperationB(event.target.value)}>
-                {operations.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
-              </select>
+              <OperationPicker
+                id="operation-b"
+                label="Operation B"
+                operations={operations}
+                value={operationIdB}
+                onChange={selectOperationB}
+              />
               <div className="parameter-controls">
                 {renderParams(selectedOperationB, paramsB, setParamsB)}
               </div>
             </div>
           </div>
-          <button type="button" disabled={busy} onClick={() => void runCompare(file)}>
-            Run comparison
+          <button type="button" className="btn btn-primary" disabled={busy} onClick={() => void runCompare(file)}>
+            {busy ? "Running…" : "Run comparison"}
           </button>
           <p className="compare-note">Metrics use the uploaded image as reference (PSNR, SSIM, MSE).</p>
         </section>
@@ -445,57 +518,43 @@ export default function Home() {
         <>
           <section className="controls">
             <label htmlFor="zoom">
-              Zoom: {zoom}%
+              Zoom
+              <span className="param-value">{zoom}%</span>
+              <input
+                id="zoom"
+                type="range"
+                min="50"
+                max="200"
+                value={zoom}
+                onChange={(event) => setZoom(Number(event.target.value))}
+              />
             </label>
-            <input
-              id="zoom"
-              type="range"
-              min="50"
-              max="200"
-              value={zoom}
-              onChange={(event) => setZoom(Number(event.target.value))}
-            />
-            <a className="button-like" href={processed} download="processed.png">
-              Download PNG
-            </a>
-            <button type="button" className="button-like" onClick={exportProcessExperiment}>
-              Export experiment bundle
-            </button>
+            <div className="controls-actions">
+              <a className="btn btn-primary" href={processed} download="processed.png">
+                Download PNG
+              </a>
+              <button type="button" className="btn btn-secondary" onClick={exportProcessExperiment}>
+                Export experiment bundle
+              </button>
+            </div>
           </section>
           <section className="viewers">
-            <Viewer label="Original · RGB" source={original} zoom={zoom} />
-            <Viewer label={`Processed · ${outputSpace ?? "RGB"}`} source={processed} zoom={zoom} />
+            <ViewerPanel label="Original · RGB" source={original} zoom={zoom} />
+            <ViewerPanel label={`Processed · ${outputSpace ?? "RGB"}`} source={processed} zoom={zoom} />
           </section>
-          <section className="details">
-            <div>
-              <span>Dimensions</span>
-              <strong>
-                {metadata.width} × {metadata.height}
-              </strong>
-            </div>
-            <div>
-              <span>Channels</span>
-              <strong>{metadata.channels} RGB</strong>
-            </div>
-            <div>
-              <span>Source</span>
-              <strong>{metadata.mediaType}</strong>
-            </div>
-            <div>
-              <span>File size</span>
-              <strong>{formatBytes(metadata.fileSizeBytes)}</strong>
-            </div>
-            <div>
-              <span>Processing</span>
-              <strong>{timing?.processing.toFixed(2)} ms</strong>
-            </div>
-            <div>
-              <span>Total request</span>
-              <strong>{timing?.request.toFixed(2)} ms</strong>
-            </div>
-          </section>
+          <StatGrid
+            items={[
+              { label: "Dimensions", value: `${metadata.width} × ${metadata.height}` },
+              { label: "Channels", value: `${metadata.channels} RGB` },
+              { label: "Source", value: metadata.mediaType },
+              { label: "File size", value: formatBytes(metadata.fileSizeBytes) },
+              { label: "Processing", value: `${timing?.processing.toFixed(2)} ms` },
+              { label: "Total request", value: `${timing?.request.toFixed(2)} ms` },
+            ]}
+          />
           {histogram ? (
-            <section className="histogram-panel">
+            <section className="histogram-panel panel">
+              <h3>Intensity histogram</h3>
               <Histogram chart={histogram} />
             </section>
           ) : null}
@@ -505,80 +564,74 @@ export default function Home() {
       {original && compareA && compareB && metadata && mode === "compare" ? (
         <>
           <section className="controls">
-            <label htmlFor="zoom-compare">Zoom: {zoom}%</label>
-            <input
-              id="zoom-compare"
-              type="range"
-              min="50"
-              max="200"
-              value={zoom}
-              onChange={(event) => setZoom(Number(event.target.value))}
-            />
-            <button type="button" className="button-like" onClick={exportCompareExperiment}>
-              Export experiment bundle
-            </button>
+            <label htmlFor="zoom-compare">
+              Zoom
+              <span className="param-value">{zoom}%</span>
+              <input
+                id="zoom-compare"
+                type="range"
+                min="50"
+                max="200"
+                value={zoom}
+                onChange={(event) => setZoom(Number(event.target.value))}
+              />
+            </label>
+            <div className="controls-actions">
+              <button type="button" className="btn btn-secondary" onClick={exportCompareExperiment}>
+                Export experiment bundle
+              </button>
+            </div>
           </section>
           <section className="viewers viewers-triple">
-            <Viewer label="Original · reference" source={original} zoom={zoom} />
-            <Viewer label={`Result A · ${operationId}`} source={compareA} zoom={zoom} />
-            <Viewer label={`Result B · ${operationIdB}`} source={compareB} zoom={zoom} />
+            <ViewerPanel label="Original · reference" source={original} zoom={zoom} />
+            <ViewerPanel label={`Result A · ${operationId}`} source={compareA} zoom={zoom} />
+            <ViewerPanel label={`Result B · ${operationIdB}`} source={compareB} zoom={zoom} />
           </section>
-          <section className="details">
-            <div>
-              <span>Processing A</span>
-              <strong>{compareTiming?.a.toFixed(2)} ms</strong>
-            </div>
-            <div>
-              <span>Processing B</span>
-              <strong>{compareTiming?.b.toFixed(2)} ms</strong>
-            </div>
-            <div>
-              <span>Total request</span>
-              <strong>{compareTiming?.request.toFixed(2)} ms</strong>
-            </div>
-          </section>
+          <StatGrid
+            columns={3}
+            items={[
+              { label: "Processing A", value: `${compareTiming?.a.toFixed(2)} ms` },
+              { label: "Processing B", value: `${compareTiming?.b.toFixed(2)} ms` },
+              { label: "Total request", value: `${compareTiming?.request.toFixed(2)} ms` },
+            ]}
+          />
           {metricsA && metricsB ? (
-            <section className="metrics-panel" aria-label="Quantitative metrics vs original">
+            <section className="metrics-panel panel" aria-label="Quantitative metrics vs original">
               <h2>Metrics vs original</h2>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Arm</th>
-                    <th>MSE</th>
-                    <th>PSNR (dB)</th>
-                    <th>SSIM</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>A</td>
-                    <td>{metricsA.mse.toFixed(6)}</td>
-                    <td>{formatPsnr(metricsA.psnr)}</td>
-                    <td>{metricsA.ssim.toFixed(4)}</td>
-                  </tr>
-                  <tr>
-                    <td>B</td>
-                    <td>{metricsB.mse.toFixed(6)}</td>
-                    <td>{formatPsnr(metricsB.psnr)}</td>
-                    <td>{metricsB.ssim.toFixed(4)}</td>
-                  </tr>
-                </tbody>
-              </table>
+              <div className="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Arm</th>
+                      <th>MSE</th>
+                      <th>PSNR (dB)</th>
+                      <th>SSIM</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>A</td>
+                      <td>{metricsA.mse.toFixed(6)}</td>
+                      <td>{formatPsnr(metricsA.psnr)}</td>
+                      <td>{metricsA.ssim.toFixed(4)}</td>
+                    </tr>
+                    <tr>
+                      <td>B</td>
+                      <td>{metricsB.mse.toFixed(6)}</td>
+                      <td>{formatPsnr(metricsB.psnr)}</td>
+                      <td>{metricsB.ssim.toFixed(4)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </section>
           ) : null}
         </>
       ) : null}
-    </main>
-  );
-}
 
-function Viewer({ label, source, zoom }: { label: string; source: string; zoom: number }) {
-  return (
-    <article className="viewer">
-      <h2>{label}</h2>
-      <div className="image-frame">
-        <img src={source} alt={label} style={{ transform: `scale(${zoom / 100})` }} />
-      </div>
-    </article>
+      <footer className="lab-footer">
+        Classical image-processing lab · registry-driven operations · deterministic server-side processing
+      </footer>
+    </main>
   );
 }
