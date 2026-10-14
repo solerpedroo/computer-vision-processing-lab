@@ -14,6 +14,15 @@ import {
   type MetricsResponse,
   type Operation,
 } from "../lib/api";
+import {
+  buildCompareRecord,
+  buildProcessRecord,
+  downloadDataUrl,
+  downloadTextFile,
+  metricsCsv,
+  parseExperimentJson,
+  timingCsvProcess,
+} from "../lib/experiment";
 import { formatBytes, imageMetadata, pngBase64ToFile, type ImageMetadata } from "../lib/image";
 
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
@@ -43,6 +52,8 @@ function formatPsnr(value: number | null): string {
 
 export default function Home() {
   const inputRef = useRef<HTMLInputElement>(null);
+  const importRef = useRef<HTMLInputElement>(null);
+  const [importNotice, setImportNotice] = useState<string | null>(null);
   const [mode, setMode] = useState<LabMode>("process");
   const [file, setFile] = useState<File | null>(null);
   const [original, setOriginal] = useState<string | null>(null);
@@ -190,8 +201,66 @@ export default function Home() {
     setParamsB(operationDefaults(nextOperation));
   }
 
+  function exportProcessExperiment() {
+    if (!metadata || !timing) return;
+    const record = buildProcessRecord({
+      metadata,
+      operationId,
+      params,
+      timing,
+      outputColorSpace: outputSpace,
+    });
+    downloadTextFile(JSON.stringify(record, null, 2), "experiment-record.json", "application/json");
+    downloadTextFile(timingCsvProcess(record), "experiment-timing.csv", "text/csv");
+    if (original) downloadDataUrl(original, "original.png");
+    if (processed) downloadDataUrl(processed, "processed.png");
+  }
+
+  function exportCompareExperiment() {
+    if (!metadata || !compareTiming || !metricsA || !metricsB) return;
+    const record = buildCompareRecord({
+      metadata,
+      operationId,
+      params,
+      operationIdB,
+      paramsB,
+      timing: compareTiming,
+      metricsA,
+      metricsB,
+    });
+    downloadTextFile(JSON.stringify(record, null, 2), "experiment-record.json", "application/json");
+    downloadTextFile(metricsCsv(record), "experiment-metrics.csv", "text/csv");
+    if (original) downloadDataUrl(original, "original.png");
+    if (compareA) downloadDataUrl(compareA, "result-a.png");
+    if (compareB) downloadDataUrl(compareB, "result-b.png");
+  }
+
+  async function importExperimentFile(nextFile: File | undefined) {
+    if (!nextFile) return;
+    setImportNotice(null);
+    setError(null);
+    try {
+      const imported = parseExperimentJson(await nextFile.text());
+      setMode(imported.mode);
+      setOperationId(imported.operationId);
+      setParams(imported.params);
+      if (imported.mode === "compare" && imported.operationIdB && imported.paramsB) {
+        setOperationIdB(imported.operationIdB);
+        setParamsB(imported.paramsB);
+      }
+      setImportNotice(
+        `Loaded ${imported.mode} configuration for "${imported.imageHint.fileName}". Re-upload the same image to reproduce results.`,
+      );
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Could not import experiment file.");
+    } finally {
+      if (importRef.current) importRef.current.value = "";
+    }
+  }
+
   function reset() {
     if (original) URL.revokeObjectURL(original);
+    setImportNotice(null);
     setFile(null);
     setOriginal(null);
     setProcessed(null);
@@ -297,6 +366,24 @@ export default function Home() {
           </p>
         ) : null}
         {busy ? <p className="status">Processing image…</p> : null}
+        {importNotice ? <p className="status">{importNotice}</p> : null}
+      </section>
+
+      <section className="export-panel" aria-label="Experiment export and import">
+        <h2>Experiment export</h2>
+        <p>Download JSON parameters, CSV metrics/timing, and PNG snapshots from the current session.</p>
+        <div className="export-actions">
+          <button type="button" className="button-like" onClick={() => importRef.current?.click()}>
+            Import experiment JSON
+          </button>
+          <input
+            ref={importRef}
+            type="file"
+            accept="application/json,.json"
+            className="sr-only"
+            onChange={(event) => void importExperimentFile(event.target.files?.[0])}
+          />
+        </div>
       </section>
 
       {file && mode === "process" && selectedOperation ? (
@@ -371,6 +458,9 @@ export default function Home() {
             <a className="button-like" href={processed} download="processed.png">
               Download PNG
             </a>
+            <button type="button" className="button-like" onClick={exportProcessExperiment}>
+              Export experiment bundle
+            </button>
           </section>
           <section className="viewers">
             <Viewer label="Original · RGB" source={original} zoom={zoom} />
@@ -424,6 +514,9 @@ export default function Home() {
               value={zoom}
               onChange={(event) => setZoom(Number(event.target.value))}
             />
+            <button type="button" className="button-like" onClick={exportCompareExperiment}>
+              Export experiment bundle
+            </button>
           </section>
           <section className="viewers viewers-triple">
             <Viewer label="Original · reference" source={original} zoom={zoom} />
