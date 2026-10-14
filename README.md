@@ -6,10 +6,9 @@ and FastAPI/OpenCV/NumPy on the backend.
 
 ## Project status
 
-**Waves 0–7 are complete** through algorithm comparison and metrics. The lab supports
-registry-driven processing via `POST /api/process`, dual-run `POST /api/compare`, and
-reference metrics via `POST /api/metrics`, with a **Compare** mode in the UI.
-Next: Wave 8 experiment export. See [`docs/agentic/workboard.md`](docs/agentic/workboard.md).
+**Waves 0–8 are complete** (through experiment export). The UI exports JSON/CSV/PNG
+bundles and imports experiment configs; CLI studies live in [`experiments/`](experiments/README.md).
+Next: **Wave 9** — E2E tests, deploy, portfolio polish. See [`docs/agentic/workboard.md`](docs/agentic/workboard.md).
 
 ## Read first
 
