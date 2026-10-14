@@ -56,3 +56,16 @@ unknown operation returns `422`.
 All output images are encoded PNG. Responses distinguish algorithm
 `processing_ms` from full `request_ms`. `/api/compare`, `/api/frequency`, and
 `/api/metrics` remain deferred to their planned waves.
+
+## Color operations and histograms
+
+`/api/operations` now publishes color operations and their parameter defaults,
+limits, steps, and enum values. `POST /api/process` accepts an optional `params`
+multipart field containing a JSON object; unknown keys, invalid enums, and values
+outside registry bounds return `422`.
+
+Every Wave 2 result can include a labelled `histogram` containing 256 bins and
+series names. RGB and grayscale outputs use component/intensity values in
+`[0, 255]`. HSV and Lab previews pack native components into PNG slots for
+inspection; they are **not** RGB color renderings. Their chart labels and channel
+views retain the corresponding native component semantics.
