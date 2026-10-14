@@ -64,3 +64,18 @@ chat context; implementation details belong in task cards.
 - **Consequence:** API validation returns clear 4xx errors; the UI advertises
   the same file envelope. A later performance wave may amend the numbers with
   measured evidence, not per-route overrides.
+
+## ADR-006 — Native color components and preview encoding
+
+- **Status:** accepted
+- **Date:** 2026-10-13
+- **Decision:** RGB input is converted to OpenCV's native HSV or Lab component
+  arrays for analysis. When a three-channel HSV/Lab result is exported as PNG,
+  those native component values occupy the PNG's RGB slots solely as an
+  inspection preview; it is not a perceptual RGB rendition. Channel operations
+  return a grayscale view of the selected native component, and histograms name
+  component axes explicitly.
+- **Why:** This preserves numerical meaning for experiments while avoiding a
+  second, misleading color conversion at the API boundary.
+- **Consequence:** The UI must label HSV/Lab previews and charts accurately;
+  code and documentation cannot imply that an HSV/Lab preview is display RGB.
