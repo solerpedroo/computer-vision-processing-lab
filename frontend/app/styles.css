@@ -48,5 +48,9 @@ button:hover, .button-like:hover { background: #12457f; }
 .details span { display: block; color: #9eb4d1; font-size: .75rem; margin-bottom: .35rem; }
 .details strong { font-size: .88rem; }
 .histogram-panel { margin-top: 1rem; border: 1px solid #23334a; border-radius: .75rem; background: #0a1626; padding: .5rem; }
+.export-panel { margin: 1rem 0; border: 1px solid #23334a; border-radius: .75rem; background: #0a1626; padding: 1rem; }
+.export-panel p { color: #9eb4d1; font-size: .9rem; }
+.export-actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: .75rem; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 
 @media (max-width: 760px) { .lab-shell { padding: 1rem; } .viewers, .viewers-triple { grid-template-columns: 1fr; } .compare-panel .compare-config { grid-template-columns: 1fr; } .details { grid-template-columns: repeat(2, 1fr); } .lab-header { align-items: flex-start; } .operation-panel { grid-template-columns: 1fr; } }
