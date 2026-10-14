@@ -58,3 +58,11 @@ when the user chooses **Apply operation**.
 OpenCV receives RGB arrays. Grayscale results are two-dimensional `uint8` PNGs.
 HSV and Lab results preserve native component arrays for channels and charts;
 their three-channel PNG is explicitly an inspection encoding per ADR-006.
+
+## Wave 3 spatial filtering
+
+Spatial operations receive and return RGB `uint8` arrays. Box and Gaussian
+filters use `REFLECT_101` borders; median uses OpenCV's documented edge behavior;
+bilateral uses its native edge-preserving implementation. Odd kernels are
+validated by the registry and again at the processing boundary. Sharpening uses
+a fixed 5×5 Gaussian unsharp mask; Laplacian returns its absolute RGB response.
