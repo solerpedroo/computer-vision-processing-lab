@@ -24,6 +24,15 @@ from app.processing.edges.operations import (
     sobel_y,
 )
 from app.processing.models import ProcessResult
+from app.processing.morphology.operations import (
+    adaptive_threshold,
+    binary_threshold,
+    closing,
+    dilate,
+    erode,
+    opening,
+    otsu_threshold,
+)
 from app.processing.registry import get_operation_ids
 from app.processing.spatial.operations import (
     spatial_bilateral_filter,
@@ -55,6 +64,9 @@ HANDLERS: dict[str, Handler] = {
     "spatial_laplacian": spatial_laplacian,
     "edge_sobel_x": sobel_x, "edge_sobel_y": sobel_y, "edge_sobel_magnitude": sobel_magnitude,
     "edge_prewitt": prewitt, "edge_laplacian": edge_laplacian, "edge_canny": canny,
+    "morph_binary_threshold": binary_threshold, "morph_adaptive_threshold": adaptive_threshold,
+    "morph_otsu_threshold": otsu_threshold, "morph_erode": erode, "morph_dilate": dilate,
+    "morph_opening": opening, "morph_closing": closing,
 }
 
 
