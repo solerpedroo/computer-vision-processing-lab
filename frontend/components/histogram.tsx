@@ -10,19 +10,19 @@ const Plot = dynamic(() => import("react-plotly.js"), { ssr: false });
 export function Histogram({ chart }: { chart: HistogramChart }) {
   const data: Data[] = chart.series.map((series) => ({ type: "scattergl", mode: "lines", name: series.name, x: [...series.x], y: [...series.counts] }));
   const layout: Partial<Layout> = {
-    title: { text: chart.title, font: { color: "#e8eef8", size: 15 } },
+    title: { text: chart.title, font: { color: "#18181b", size: 15 } },
     paper_bgcolor: "rgba(0,0,0,0)",
-    plot_bgcolor: "#070e1a",
-    font: { color: "#94a8c4", family: "Inter, system-ui, sans-serif" },
+    plot_bgcolor: "rgba(0,0,0,0)",
+    font: { color: "#52525b", family: "var(--font-geist-sans), system-ui, sans-serif" },
     xaxis: {
       title: { text: "Component value", font: { size: 12 } },
-      gridcolor: "#1e2d45",
-      zerolinecolor: "#2d4568",
+      gridcolor: "rgba(0,0,0,0.06)",
+      zerolinecolor: "rgba(0,0,0,0.1)",
     },
     yaxis: {
       title: { text: "Pixel count", font: { size: 12 } },
-      gridcolor: "#1e2d45",
-      zerolinecolor: "#2d4568",
+      gridcolor: "rgba(0,0,0,0.06)",
+      zerolinecolor: "rgba(0,0,0,0.1)",
     },
     margin: { l: 56, r: 20, t: 40, b: 52 },
     legend: { orientation: "h", y: -0.25, font: { size: 11 } },
