@@ -94,3 +94,10 @@ Pure metric functions live in `backend/app/metrics/` without FastAPI imports.
 `POST /api/compare` decodes once and invokes the dispatcher twice. `POST /api/metrics`
 decodes two uploads and returns MSE, PSNR (nullable), and SSIM. The frontend **Compare**
 mode runs both arms, shows three viewers, and fetches metrics against the original upload.
+
+## Wave 8 experiment export
+
+Export is implemented in the browser (`frontend/lib/experiment.ts`): structured JSON
+records, CSV derivatives, and sequential PNG downloads. Import parses JSON and restores
+UI state without storing images server-side. Reproducible batch studies use Python CLIs
+under `experiments/*/run.py` calling the same dispatcher as the API.
