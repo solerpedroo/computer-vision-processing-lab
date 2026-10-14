@@ -87,6 +87,20 @@ Both images must decode to the same shape. Response:
 
 `psnr` is `null` when images are identical (infinite PSNR).
 
+## Experiment export (Wave 8 — client-side)
+
+The browser builds versioned JSON records (`schema_version: 1`) without a dedicated
+export endpoint:
+
+- **Process mode** — `experiment-record.json` plus `experiment-timing.csv` and PNG downloads.
+- **Compare mode** — adds `experiment-metrics.csv` with PSNR/SSIM/MSE for arms A and B.
+
+**Import:** upload a previously exported JSON file to restore `mode`, operation ids, and
+params; the user must re-upload the source image matching the recorded `image` fingerprint
+(name, size, dimensions).
+
+CLI protocols live under [`experiments/`](../../experiments/README.md).
+
 ## Color operations and histograms
 
 `/api/operations` now publishes color operations and their parameter defaults,
