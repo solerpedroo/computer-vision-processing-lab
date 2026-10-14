@@ -20,7 +20,7 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: `${pythonBin} -m uvicorn app.main:app --app-dir ${repoRoot}/backend --host 127.0.0.1 --port 8000`,
+      command: `"${pythonBin}" -m uvicorn app.main:app --app-dir "${repoRoot}/backend" --host 127.0.0.1 --port 8000`,
       url: `${apiUrl}/api/health`,
       reuseExistingServer: !process.env.CI,
       cwd: __dirname,
