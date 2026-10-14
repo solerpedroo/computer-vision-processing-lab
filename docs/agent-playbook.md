@@ -46,7 +46,8 @@ Refer to `implementation-plan.md` for the product-specific DoD of every wave.
 | 5 | done | `wave-5-morphology.md` | 2026-10-13 |
 | 6 | done | `wave-6-frequency.md` | 2026-10-13 |
 | 7 | done | `wave-7-comparison.md` | 2026-10-13 |
-| 8–9 | blocked | — | after Wave 8 export |
+| 8 | done | `wave-8-experiment-export.md` | 2026-10-13 |
+| 9 | planned | — | E2E + deploy |
 
 When marking a wave **done**, update this table, the workboard row, and record
 `ruff` / `pytest` / frontend test output in the task card.
