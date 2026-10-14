@@ -2,10 +2,9 @@
 
 ## Current boundary
 
-**Waves 0–8 are closed** (processing, compare, metrics, experiment export/import, CLI studies).
-**Active work: Wave 9** — Playwright, Vercel/Railway deploy, portfolio README; see
-[`docs/agentic/workboard.md`](docs/agentic/workboard.md). Delivery order:
-[`docs/implementation-plan.md`](docs/implementation-plan.md).
+**MVP gate closed (waves 0–9).** New work must be scoped outside [`docs/project-scope.md`](docs/project-scope.md) §8
+future features or as maintenance. See [`docs/mvp-acceptance.md`](docs/mvp-acceptance.md) and
+[`docs/agentic/workboard.md`](docs/agentic/workboard.md).
 
 ## Start protocol
 
