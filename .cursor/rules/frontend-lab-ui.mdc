@@ -6,7 +6,7 @@ alwaysApply: false
 
 # Lab UI
 
-- UI is English, dark, accessible, and explains the selected operation from registry metadata.
+- UI is English, light by default (clear neutral canvas), accessible, and explains the selected operation from registry metadata.
 - Keep `originalImage` immutable until an explicit reset; processing writes only `processedImage`.
 - Render parameter controls from the registry; do not duplicate server defaults, limits, or operation names.
 - Debounce parameter changes and avoid requests for unchanged configurations.
