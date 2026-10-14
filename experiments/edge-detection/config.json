@@ -1,0 +1,8 @@
+{
+  "operators": [
+    { "operation_id": "edge_sobel_magnitude", "params": {} },
+    { "operation_id": "edge_prewitt", "params": {} },
+    { "operation_id": "edge_laplacian", "params": {} },
+    { "operation_id": "edge_canny", "params": { "threshold1": 50, "threshold2": 150 } }
+  ]
+}
