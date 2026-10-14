@@ -39,6 +39,7 @@ export type ProcessResponse = {
     source_format: string;
     source_file_size_bytes: number;
     output_color_space: string | null;
+    connected_components: number | null;
   };
   histogram: HistogramChart | null;
 };
