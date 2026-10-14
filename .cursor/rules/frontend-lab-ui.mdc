@@ -9,6 +9,6 @@ alwaysApply: false
 - UI is English, light by default (clear neutral canvas), accessible, and explains the selected operation from registry metadata.
 - Keep `originalImage` immutable until an explicit reset; processing writes only `processedImage`.
 - Render parameter controls from the registry; do not duplicate server defaults, limits, or operation names.
-- Debounce parameter changes and avoid requests for unchanged configurations.
+- Parameter changes apply only when the user clicks Apply or Run comparison; do not auto-fire requests on slider movement.
 - Surface API errors and timing visibly; do not hide failed processing behind stale output.
 - Charts label axes, units, legends, and channel/color-space conventions.
