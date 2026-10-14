@@ -1,14 +1,20 @@
 "use client";
 
-/* eslint-disable @next/next/no-img-element */
-
 import { ChangeEvent, DragEvent, useEffect, useRef, useState } from "react";
 
-import { Histogram } from "../components/histogram";
-import { OperationPicker } from "../components/operation-picker";
-import { StatGrid } from "../components/stat-grid";
-import { ViewerPanel } from "../components/viewer-panel";
-import { Spinner } from "../components/ui/spinner";
+import { AppShell } from "@/components/layout/app-shell";
+import { FormPanel } from "@/components/layout/form-panel";
+import { LabModeTabs } from "@/components/layout/lab-mode-tabs";
+import { PageHeader } from "@/components/layout/page-header";
+import { ImageEmptyState } from "@/components/lab/image-empty-state";
+import { ImageSessionBar } from "@/components/lab/image-session-bar";
+import { ParameterControls } from "@/components/lab/parameter-controls";
+import { Histogram } from "@/components/histogram";
+import { OperationPicker } from "@/components/operation-picker";
+import { StatGrid } from "@/components/stat-grid";
+import { ViewerPanel } from "@/components/viewer-panel";
+import { Button, buttonClassName } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import {
   compareOperations,
   computeMetrics,
@@ -282,112 +288,50 @@ export default function Home() {
     if (inputRef.current) inputRef.current.value = "";
   }
 
-  function renderParams(
-    operation: Operation | undefined,
-    values: Record<string, number | string>,
-    onChange: (next: Record<string, number | string>) => void,
-  ) {
-    if (!operation) return null;
-    return operation.params.map((parameter) =>
-      parameter.type === "enum" ? (
-        <label key={parameter.name}>
-          {parameter.name}
-          <select
-            className="select"
-            value={String(values[parameter.name])}
-            onChange={(event) => onChange({ ...values, [parameter.name]: event.target.value })}
-          >
-            {parameter.enum?.map((choice) => (
-              <option key={choice}>{choice}</option>
-            ))}
-          </select>
-        </label>
-      ) : (
-        <label key={parameter.name} className="param-slider">
-          <span>
-            {parameter.name}{" "}
-            <span className="param-value">{values[parameter.name]}</span>
-          </span>
-          <input
-            type="range"
-            min={parameter.min}
-            max={parameter.max}
-            step={parameter.step}
-            value={Number(values[parameter.name])}
-            onChange={(event) => onChange({ ...values, [parameter.name]: Number(event.target.value) })}
-          />
-        </label>
-      ),
-    );
+  function openImagePicker() {
+    inputRef.current?.click();
   }
 
   return (
-    <main className="lab-shell" id="main-content">
-      <header className="lab-header">
-        <div className="lab-brand">
-          <p className="eyebrow">Computer Vision Processing Lab</p>
-          <h1>{mode === "process" ? "Image processing" : "Algorithm comparison"}</h1>
-          <p className="lab-subtitle">
-            Upload an image, tune registry-backed operations, and inspect timing, histograms, and quantitative metrics in
-            one workspace.
-          </p>
-        </div>
-        <div className="lab-header-actions">
-          <div className="mode-switch" role="group" aria-label="Lab mode">
-            <button
-              type="button"
-              className={mode === "process" ? "active" : ""}
-              aria-pressed={mode === "process"}
-              onClick={() => setMode("process")}
-            >
-              Process
-            </button>
-            <button
-              type="button"
-              className={mode === "compare" ? "active" : ""}
-              aria-pressed={mode === "compare"}
-              onClick={() => setMode("compare")}
-            >
-              Compare
-            </button>
-          </div>
-          {original ? (
-            <button type="button" className="btn btn-ghost" onClick={reset}>
-              Reset image
-            </button>
-          ) : null}
-        </div>
-      </header>
+    <AppShell
+      mode={mode}
+      onModeChange={setMode}
+      onImportExperiment={() => importRef.current?.click()}
+    >
+      <input
+        ref={inputRef}
+        id="image-file"
+        type="file"
+        accept="image/png,image/jpeg"
+        className="sr-only"
+        onChange={(event: ChangeEvent<HTMLInputElement>) => {
+          setBusy(true);
+          void selectFile(event.target.files?.[0]);
+        }}
+      />
+      <input
+        ref={importRef}
+        type="file"
+        accept="application/json,.json"
+        className="sr-only"
+        onChange={(event) => void importExperimentFile(event.target.files?.[0])}
+      />
+
+      <PageHeader
+        label="Computer Vision Processing Lab"
+        title={mode === "process" ? "Process" : "Compare"}
+        description={
+          mode === "process"
+            ? "Apply one registry-backed operation and inspect outputs, timing, and histograms."
+            : "Run two operations on the same image and compare metrics against the original."
+        }
+      />
+
+      <LabModeTabs mode={mode} onModeChange={setMode} />
 
       {!file ? (
-        <ol className="workflow-steps" aria-label="Getting started">
-          <li>
-            <span className="step-index">1</span>
-            <div>
-              <strong>Upload an image</strong>
-              <span>PNG or JPEG up to 10 MiB and 4096 × 4096 px.</span>
-            </div>
-          </li>
-          <li>
-            <span className="step-index">2</span>
-            <div>
-              <strong>Choose an operation</strong>
-              <span>Parameters and bounds come from the server registry.</span>
-            </div>
-          </li>
-          <li>
-            <span className="step-index">3</span>
-            <div>
-              <strong>Inspect results</strong>
-              <span>Side-by-side views, timing, histograms, and export bundles.</span>
-            </div>
-          </li>
-        </ol>
-      ) : null}
-
-      <section className="upload-section">
-        <div
-          className={`dropzone${dragOver ? " is-dragover" : ""}`}
+        <ImageEmptyState
+          dragOver={dragOver}
           onDragEnter={(event) => {
             event.preventDefault();
             setDragOver(true);
@@ -407,64 +351,36 @@ export default function Home() {
             setBusy(true);
             void selectFile(event.dataTransfer.files[0]);
           }}
-        >
-          <div className="dropzone-icon" aria-hidden="true">
-            ↑
-          </div>
-          <p>{file ? "Replace image" : "Drop a PNG or JPEG here"}</p>
-          <span>Maximum 10 MiB · 4096 × 4096 pixels</span>
-          <label className="button-like" htmlFor="image-file">
-            Browse image
-          </label>
-          <input
-            ref={inputRef}
-            id="image-file"
-            type="file"
-            accept="image/png,image/jpeg"
-            onChange={(event: ChangeEvent<HTMLInputElement>) => {
-              setBusy(true);
-              void selectFile(event.target.files?.[0]);
-            }}
-          />
-        </div>
-        <div className="feedback-row">
-          {error ? (
-            <p className="error" role="alert">
-              {error}
-            </p>
-          ) : null}
-          {busy ? (
-            <p className="status">
-              <Spinner size="sm" label="Processing image" />
-              Processing image…
-            </p>
-          ) : null}
-          {!busy && importNotice ? <p className="status status-notice">{importNotice}</p> : null}
-        </div>
-      </section>
+        />
+      ) : metadata ? (
+        <ImageSessionBar metadata={metadata} onReplace={openImagePicker} onClear={reset} />
+      ) : null}
 
-      <section className="export-panel panel" aria-label="Experiment export and import">
-        <div className="panel-header">
-          <h2>Experiment export</h2>
-          <p>Download JSON parameters, CSV metrics or timing, and PNG snapshots from the current session.</p>
-        </div>
-        <div className="export-actions">
-          <button type="button" className="btn btn-secondary" onClick={() => importRef.current?.click()}>
-            Import experiment JSON
-          </button>
-          <input
-            ref={importRef}
-            type="file"
-            accept="application/json,.json"
-            className="sr-only"
-            onChange={(event) => void importExperimentFile(event.target.files?.[0])}
-          />
-        </div>
-      </section>
+      <div className="space-y-2">
+        {error ? (
+          <p
+            className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive-foreground"
+            role="alert"
+          >
+            {error}
+          </p>
+        ) : null}
+        {busy ? (
+          <p className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Spinner size="sm" label="Processing image" />
+            Processing image…
+          </p>
+        ) : null}
+        {!busy && importNotice ? (
+          <p className="rounded-lg border border-brand/25 bg-brand/5 px-4 py-3 text-sm text-muted-foreground">
+            {importNotice}
+          </p>
+        ) : null}
+      </div>
 
       {file && mode === "process" && selectedOperation ? (
-        <section className="operation-panel panel">
-          <div>
+        <FormPanel title="Operation" subtitle={selectedOperation.description}>
+          <div className="space-y-5">
             <OperationPicker
               id="operation"
               label="Operation"
@@ -472,19 +388,21 @@ export default function Home() {
               value={operationId}
               onChange={selectOperation}
             />
-            <p className="operation-meta">{selectedOperation.description}</p>
+            <ParameterControls operation={selectedOperation} values={params} onChange={setParams} />
+            <Button disabled={busy} onClick={() => void apply(file)}>
+              {busy ? "Applying…" : "Apply operation"}
+            </Button>
           </div>
-          <div className="parameter-controls">{renderParams(selectedOperation, params, setParams)}</div>
-          <button type="button" className="btn btn-primary" disabled={busy} onClick={() => void apply(file)}>
-            {busy ? "Applying…" : "Apply operation"}
-          </button>
-        </section>
+        </FormPanel>
       ) : null}
 
       {file && mode === "compare" && selectedOperation && selectedOperationB ? (
-        <section className="operation-panel compare-panel panel">
-          <div className="compare-config">
-            <div>
+        <FormPanel
+          title="Compare operations"
+          subtitle="Metrics use the uploaded image as reference (PSNR, SSIM, MSE)."
+        >
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div className="space-y-4">
               <OperationPicker
                 id="operation-a"
                 label="Operation A"
@@ -492,9 +410,9 @@ export default function Home() {
                 value={operationId}
                 onChange={selectOperation}
               />
-              <div className="parameter-controls">{renderParams(selectedOperation, params, setParams)}</div>
+              <ParameterControls operation={selectedOperation} values={params} onChange={setParams} />
             </div>
-            <div>
+            <div className="space-y-4">
               <OperationPicker
                 id="operation-b"
                 label="Operation B"
@@ -502,43 +420,43 @@ export default function Home() {
                 value={operationIdB}
                 onChange={selectOperationB}
               />
-              <div className="parameter-controls">
-                {renderParams(selectedOperationB, paramsB, setParamsB)}
-              </div>
+              <ParameterControls operation={selectedOperationB} values={paramsB} onChange={setParamsB} />
             </div>
           </div>
-          <button type="button" className="btn btn-primary" disabled={busy} onClick={() => void runCompare(file)}>
+          <Button className="mt-5" disabled={busy} onClick={() => void runCompare(file)}>
             {busy ? "Running…" : "Run comparison"}
-          </button>
-          <p className="compare-note">Metrics use the uploaded image as reference (PSNR, SSIM, MSE).</p>
-        </section>
+          </Button>
+        </FormPanel>
       ) : null}
 
       {original && processed && metadata && mode === "process" ? (
         <>
-          <section className="controls">
-            <label htmlFor="zoom">
-              Zoom
-              <span className="param-value">{zoom}%</span>
+          <section className="surface-raised flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <label htmlFor="zoom" className="flex min-w-[200px] flex-1 flex-col gap-2 text-sm">
+              <span className="flex justify-between font-medium">
+                Zoom
+                <span className="font-mono text-xs tabular-nums text-brand">{zoom}%</span>
+              </span>
               <input
                 id="zoom"
                 type="range"
+                className="accent-brand"
                 min="50"
                 max="200"
                 value={zoom}
                 onChange={(event) => setZoom(Number(event.target.value))}
               />
             </label>
-            <div className="controls-actions">
-              <a className="btn btn-primary" href={processed} download="processed.png">
+            <div className="flex flex-wrap gap-2">
+              <a className={buttonClassName("default", "default")} href={processed} download="processed.png">
                 Download PNG
               </a>
-              <button type="button" className="btn btn-secondary" onClick={exportProcessExperiment}>
+              <Button variant="secondary" onClick={exportProcessExperiment}>
                 Export experiment bundle
-              </button>
+              </Button>
             </div>
           </section>
-          <section className="viewers">
+          <section className="viewers grid gap-4 lg:grid-cols-2">
             <ViewerPanel label="Original · RGB" source={original} zoom={zoom} />
             <ViewerPanel label={`Processed · ${outputSpace ?? "RGB"}`} source={processed} zoom={zoom} />
           </section>
@@ -553,36 +471,36 @@ export default function Home() {
             ]}
           />
           {histogram ? (
-            <section className="histogram-panel panel">
-              <h3>Intensity histogram</h3>
+            <FormPanel title="Intensity histogram">
               <Histogram chart={histogram} />
-            </section>
+            </FormPanel>
           ) : null}
         </>
       ) : null}
 
       {original && compareA && compareB && metadata && mode === "compare" ? (
         <>
-          <section className="controls">
-            <label htmlFor="zoom-compare">
-              Zoom
-              <span className="param-value">{zoom}%</span>
+          <section className="surface-raised flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <label htmlFor="zoom-compare" className="flex min-w-[200px] flex-1 flex-col gap-2 text-sm">
+              <span className="flex justify-between font-medium">
+                Zoom
+                <span className="font-mono text-xs tabular-nums text-brand">{zoom}%</span>
+              </span>
               <input
                 id="zoom-compare"
                 type="range"
+                className="accent-brand"
                 min="50"
                 max="200"
                 value={zoom}
                 onChange={(event) => setZoom(Number(event.target.value))}
               />
             </label>
-            <div className="controls-actions">
-              <button type="button" className="btn btn-secondary" onClick={exportCompareExperiment}>
-                Export experiment bundle
-              </button>
-            </div>
+            <Button variant="secondary" onClick={exportCompareExperiment}>
+              Export experiment bundle
+            </Button>
           </section>
-          <section className="viewers viewers-triple">
+          <section className="viewers grid gap-4 lg:grid-cols-3">
             <ViewerPanel label="Original · reference" source={original} zoom={zoom} />
             <ViewerPanel label={`Result A · ${operationId}`} source={compareA} zoom={zoom} />
             <ViewerPanel label={`Result B · ${operationIdB}`} source={compareB} zoom={zoom} />
@@ -596,42 +514,41 @@ export default function Home() {
             ]}
           />
           {metricsA && metricsB ? (
-            <section className="metrics-panel panel" aria-label="Quantitative metrics vs original">
-              <h2>Metrics vs original</h2>
-              <div className="table-wrap">
-                <table>
-                  <thead>
+            <FormPanel title="Metrics vs original">
+              <div className="overflow-x-auto rounded-lg border border-border">
+                <table className="w-full min-w-[420px] text-left text-sm">
+                  <thead className="border-b border-border bg-muted/30 text-xs uppercase tracking-wide text-muted-foreground">
                     <tr>
-                      <th>Arm</th>
-                      <th>MSE</th>
-                      <th>PSNR (dB)</th>
-                      <th>SSIM</th>
+                      <th className="px-4 py-3 font-medium">Arm</th>
+                      <th className="px-4 py-3 font-medium">MSE</th>
+                      <th className="px-4 py-3 font-medium">PSNR (dB)</th>
+                      <th className="px-4 py-3 font-medium">SSIM</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td>A</td>
-                      <td>{metricsA.mse.toFixed(6)}</td>
-                      <td>{formatPsnr(metricsA.psnr)}</td>
-                      <td>{metricsA.ssim.toFixed(4)}</td>
+                    <tr className="border-b border-border/60">
+                      <td className="px-4 py-3 font-medium">A</td>
+                      <td className="px-4 py-3 font-mono tabular-nums">{metricsA.mse.toFixed(6)}</td>
+                      <td className="px-4 py-3 font-mono tabular-nums">{formatPsnr(metricsA.psnr)}</td>
+                      <td className="px-4 py-3 font-mono tabular-nums">{metricsA.ssim.toFixed(4)}</td>
                     </tr>
                     <tr>
-                      <td>B</td>
-                      <td>{metricsB.mse.toFixed(6)}</td>
-                      <td>{formatPsnr(metricsB.psnr)}</td>
-                      <td>{metricsB.ssim.toFixed(4)}</td>
+                      <td className="px-4 py-3 font-medium">B</td>
+                      <td className="px-4 py-3 font-mono tabular-nums">{metricsB.mse.toFixed(6)}</td>
+                      <td className="px-4 py-3 font-mono tabular-nums">{formatPsnr(metricsB.psnr)}</td>
+                      <td className="px-4 py-3 font-mono tabular-nums">{metricsB.ssim.toFixed(4)}</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
-            </section>
+            </FormPanel>
           ) : null}
         </>
       ) : null}
 
-      <footer className="lab-footer">
+      <footer className="border-t border-border/60 pt-6 text-center text-xs text-muted-foreground">
         Classical image-processing lab · registry-driven operations · deterministic server-side processing
       </footer>
-    </main>
+    </AppShell>
   );
 }
