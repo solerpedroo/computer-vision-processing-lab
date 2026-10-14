@@ -23,6 +23,11 @@ from app.processing.edges.operations import (
     sobel_x,
     sobel_y,
 )
+from app.processing.frequency.operations import (
+    fft_spectrum,
+    frequency_gaussian_highpass,
+    frequency_gaussian_lowpass,
+)
 from app.processing.models import ProcessResult
 from app.processing.morphology.operations import (
     adaptive_threshold,
@@ -67,6 +72,8 @@ HANDLERS: dict[str, Handler] = {
     "morph_binary_threshold": binary_threshold, "morph_adaptive_threshold": adaptive_threshold,
     "morph_otsu_threshold": otsu_threshold, "morph_erode": erode, "morph_dilate": dilate,
     "morph_opening": opening, "morph_closing": closing,
+    "frequency_spectrum": fft_spectrum, "frequency_gaussian_lowpass": frequency_gaussian_lowpass,
+    "frequency_gaussian_highpass": frequency_gaussian_highpass,
 }
 
 
