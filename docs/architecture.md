@@ -45,3 +45,16 @@ The Wave 1 UI creates a local URL for the original image and keeps it immutable.
 It displays a separate processed PNG URL, client-side metadata, timing, shared
 zoom, reset, and download. Wave 2 will replace the fixed identity selection with
 registry-driven operation controls.
+
+## Wave 2 color pipeline
+
+The dispatcher validates multipart JSON parameters against `registry.yaml`,
+applies defaults there, then invokes a pure color handler. Handlers return a
+`ProcessResult` with a displayable image and histogram data; the API adapts that
+data to JSON and Plotly renders it in the frontend. The UI fetches color registry
+entries once, generates selects/sliders from their schema, and only reprocesses
+when the user chooses **Apply operation**.
+
+OpenCV receives RGB arrays. Grayscale results are two-dimensional `uint8` PNGs.
+HSV and Lab results preserve native component arrays for channels and charts;
+their three-channel PNG is explicitly an inspection encoding per ADR-006.
