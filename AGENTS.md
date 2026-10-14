@@ -2,8 +2,8 @@
 
 ## Current boundary
 
-**Waves 0–7 are closed** (`/api/process`, `/api/compare`, `/api/metrics`, compare UI).
-**Active work: Wave 8** — experiment export and documented studies; see
+**Waves 0–8 are closed** (processing, compare, metrics, experiment export/import, CLI studies).
+**Active work: Wave 9** — Playwright, Vercel/Railway deploy, portfolio README; see
 [`docs/agentic/workboard.md`](docs/agentic/workboard.md). Delivery order:
 [`docs/implementation-plan.md`](docs/implementation-plan.md).
 
