@@ -62,6 +62,7 @@ async def process(
             source_format=decoded.source_format,
             source_file_size_bytes=decoded.file_size_bytes,
             output_color_space=(result.metadata or {}).get("output_color_space"),
+            connected_components=(result.metadata or {}).get("connected_components"),
         ),
         histogram=HistogramChart.model_validate(histogram) if histogram else None,
     )
