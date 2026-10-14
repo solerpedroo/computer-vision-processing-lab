@@ -28,3 +28,33 @@ def get_operation_ids() -> tuple[str, ...]:
     if len(set(operation_ids)) != len(operation_ids):
         raise RuntimeError("Operation registry contains duplicate IDs.")
     return operation_ids
+
+
+def validate_params(operation_id: str, supplied: dict[str, object]) -> dict[str, object]:
+    """Apply registry defaults and reject unknown, invalid, or out-of-range parameters."""
+    operation = next((item for item in get_operations() if item.get("id") == operation_id), None)
+    if operation is None:
+        raise ValueError(f"Unknown operation_id: {operation_id}")
+    definitions = operation.get("params", [])
+    allowed_names = {definition["name"] for definition in definitions}
+    unexpected = set(supplied) - allowed_names
+    if unexpected:
+        raise ValueError(f"Unsupported parameters: {sorted(unexpected)}")
+
+    validated: dict[str, object] = {}
+    for definition in definitions:
+        name = definition["name"]
+        value = supplied.get(name, definition["default"])
+        kind = definition["type"]
+        if kind == "integer" and (not isinstance(value, int) or isinstance(value, bool)):
+            raise ValueError(f"Parameter '{name}' must be an integer.")
+        if kind == "number" and (not isinstance(value, (int, float)) or isinstance(value, bool)):
+            raise ValueError(f"Parameter '{name}' must be a number.")
+        if kind == "enum" and value not in definition["enum"]:
+            raise ValueError(f"Parameter '{name}' must be one of {definition['enum']}.")
+        if kind in {"integer", "number"} and not definition["min"] <= value <= definition["max"]:
+            raise ValueError(
+                f"Parameter '{name}' must be between {definition['min']} and {definition['max']}."
+            )
+        validated[name] = value
+    return validated
