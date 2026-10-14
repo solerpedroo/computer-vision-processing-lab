@@ -2,9 +2,9 @@
 
 ## Current boundary
 
-This repository is at the **agentic-foundation gate**, before Wave 0 product
-implementation. Do not scaffold the frontend or backend merely to make a task
-look complete. The delivery sequence and product boundaries live in
+**Waves 0–7 are closed** (`/api/process`, `/api/compare`, `/api/metrics`, compare UI).
+**Active work: Wave 8** — experiment export and documented studies; see
+[`docs/agentic/workboard.md`](docs/agentic/workboard.md). Delivery order:
 [`docs/implementation-plan.md`](docs/implementation-plan.md).
 
 ## Start protocol
