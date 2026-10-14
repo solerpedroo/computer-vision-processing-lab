@@ -77,9 +77,11 @@ def decode_upload(data: bytes) -> DecodedImage:
 
 
 def encode_png(image: np.ndarray) -> bytes:
-    """Encode an RGB uint8 output image as PNG at the response boundary."""
-    if image.ndim != 3 or image.shape[2] != 3 or image.dtype != np.uint8:
-        raise ValueError("Only RGB uint8 arrays can be encoded as a Wave 1 PNG output.")
+    """Encode RGB or grayscale uint8 output as PNG at the response boundary."""
+    is_rgb = image.ndim == 3 and image.shape[2] == 3
+    is_grayscale = image.ndim == 2
+    if not (is_rgb or is_grayscale) or image.dtype != np.uint8:
+        raise ValueError("Only RGB or grayscale uint8 arrays can be encoded as PNG output.")
 
     output = BytesIO()
     Image.fromarray(image).save(output, format="PNG")
