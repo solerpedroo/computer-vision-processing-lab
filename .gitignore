@@ -10,4 +10,7 @@ coverage/
 dist/
 .env
 .env.local
+frontend/playwright-report/
+frontend/test-results/
+frontend/blob-report/
 
