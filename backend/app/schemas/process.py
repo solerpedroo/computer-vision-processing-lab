@@ -10,6 +10,7 @@ class ImageMetadata(BaseModel):
     source_format: str
     source_file_size_bytes: int = Field(ge=0)
     output_color_space: str | None = None
+    connected_components: int | None = Field(default=None, ge=0)
 
 
 class HistogramSeries(BaseModel):
