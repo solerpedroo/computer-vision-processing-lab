@@ -3,7 +3,25 @@ export type ApiHealth = {
   api_version: string;
 };
 
-export type Operation = Record<string, unknown>;
+export type OperationParameter = {
+  name: string;
+  type: "integer" | "number" | "enum";
+  default: number | string;
+  min?: number;
+  max?: number;
+  step?: number;
+  enum?: readonly string[];
+};
+
+export type Operation = {
+  id: string;
+  module: string;
+  name: string;
+  description: string;
+  output_kind: string;
+  requires_grayscale: boolean;
+  params: readonly OperationParameter[];
+};
 
 export type OperationsResponse = {
   operations: readonly Operation[];
@@ -20,7 +38,14 @@ export type ProcessResponse = {
     channels: 3;
     source_format: string;
     source_file_size_bytes: number;
+    output_color_space: string | null;
   };
+  histogram: HistogramChart | null;
+};
+
+export type HistogramChart = {
+  title: string;
+  series: readonly { name: string; x: readonly number[]; counts: readonly number[] }[];
 };
 
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -50,9 +75,14 @@ export function getOperations(): Promise<OperationsResponse> {
   return request<OperationsResponse>("/api/operations");
 }
 
-export function processImage(file: File, operationId = "color_noop"): Promise<ProcessResponse> {
+export function processImage(
+  file: File,
+  operationId = "color_noop",
+  params: Record<string, number | string> = {},
+): Promise<ProcessResponse> {
   const payload = new FormData();
   payload.append("image", file);
   payload.append("operation_id", operationId);
+  payload.append("params", JSON.stringify(params));
   return requestForm<ProcessResponse>("/api/process", payload);
 }
