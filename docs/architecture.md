@@ -66,3 +66,10 @@ filters use `REFLECT_101` borders; median uses OpenCV's documented edge behavior
 bilateral uses its native edge-preserving implementation. Odd kernels are
 validated by the registry and again at the processing boundary. Sharpening uses
 a fixed 5×5 Gaussian unsharp mask; Laplacian returns its absolute RGB response.
+
+## Wave 4 edge detection
+
+Edge operations convert canonical RGB input to grayscale internally and return
+grayscale `uint8` responses. Sobel, Prewitt, and Laplacian responses are
+absolute magnitudes; Canny returns a binary `0`/`255` edge map and rejects
+reversed thresholds.
