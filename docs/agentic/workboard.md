@@ -10,4 +10,5 @@ card rather than this table.
 | 0 | `tasks/wave-0-contract-baseline.md` | done | cv-reviewer | Wave 1 image input task may now be planned |
 | 1 | `tasks/wave-1-image-input.md` | done | cv-reviewer | Wave 2 color task may now be planned |
 | 2 | `tasks/wave-2-color-processing.md` | done | cv-reviewer | Wave 3 spatial-filter task may now be planned |
-| 3–9 | — | blocked by preceding waves | — | follow delivery sequence in implementation plan |
+| 3 | `tasks/wave-3-spatial-filtering.md` | done | cv-reviewer | Wave 4 edge-detection task may now be planned |
+| 4–9 | — | blocked by preceding waves | — | follow delivery sequence in implementation plan |
