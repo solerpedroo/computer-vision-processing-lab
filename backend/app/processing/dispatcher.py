@@ -4,15 +4,39 @@ from time import perf_counter
 import numpy as np
 
 from app.processing.color.noop import color_noop
+from app.processing.color.operations import (
+    color_brightness,
+    color_channel_hsv,
+    color_channel_lab,
+    color_channel_rgb,
+    color_contrast,
+    color_gamma,
+    color_grayscale,
+    color_hsv,
+    color_lab,
+)
 from app.processing.models import ProcessResult
 from app.processing.registry import get_operation_ids
 
-Handler = Callable[[np.ndarray], ProcessResult]
+Handler = Callable[..., ProcessResult]
 
-HANDLERS: dict[str, Handler] = {"color_noop": color_noop}
+HANDLERS: dict[str, Handler] = {
+    "color_noop": color_noop,
+    "color_grayscale": color_grayscale,
+    "color_hsv": color_hsv,
+    "color_lab": color_lab,
+    "color_channel_rgb": color_channel_rgb,
+    "color_channel_hsv": color_channel_hsv,
+    "color_channel_lab": color_channel_lab,
+    "color_brightness": color_brightness,
+    "color_contrast": color_contrast,
+    "color_gamma": color_gamma,
+}
 
 
-def execute(operation_id: str, image: np.ndarray) -> tuple[ProcessResult, float]:
+def execute(
+    operation_id: str, image: np.ndarray, params: dict[str, object]
+) -> tuple[ProcessResult, float]:
     """Run a registered processor and measure only its numerical execution."""
     try:
         handler = HANDLERS[operation_id]
@@ -20,7 +44,7 @@ def execute(operation_id: str, image: np.ndarray) -> tuple[ProcessResult, float]
         raise ValueError(f"Unknown operation_id: {operation_id}") from error
 
     started_at = perf_counter()
-    result = handler(image)
+    result = handler(image, **params)
     return result, (perf_counter() - started_at) * 1000
 
 
